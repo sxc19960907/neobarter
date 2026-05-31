@@ -67,6 +67,19 @@ type CreateItemReq struct {
 - Use table-driven tests for multiple scenarios
 - Mock external dependencies (SMS, OSS) via interfaces
 
+### Test conventions (established)
+
+- **Test framework**: `github.com/stretchr/testify` (`assert` + `require`)
+- **In-memory DB**: service-layer tests use `gorm.io/driver/sqlite` with `:memory:` — fast, no external dependency. Run with `CGO_ENABLED=1`.
+- **decimal comparison**: NEVER use `assert.Equal` on `decimal.Decimal` — internal `exp` differs between `NewFromFloat(100)` (exp=2) and DB-loaded values (exp=0). Use `expected.Equal(actual)` wrapped in `assert.True`.
+- **Optional deps as nil**: services with optional dependencies (e.g. `ItemService`'s MQ publisher) accept `nil` in tests to skip side effects.
+- **Test setup helpers**: `setupTestDB(t)` migrates only the tables under test; `createTestUser(t, db, phone)` for fixtures.
+
+Run tests:
+```bash
+cd server && CGO_ENABLED=1 go test ./...
+```
+
 ## API Design Standards
 
 - RESTful resource naming: `/v1/items`, `/v1/trades/:id/accept`
