@@ -1,5 +1,7 @@
 # NeoBarter 新易巴特 - 产品方案
 
+[![CI](https://github.com/sxc19960907/neobarter/actions/workflows/ci.yml/badge.svg)](https://github.com/sxc19960907/neobarter/actions/workflows/ci.yml)
+
 ## 一、项目概述
 
 ### 1.1 产品名称
