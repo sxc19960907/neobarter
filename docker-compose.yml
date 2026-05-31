@@ -80,6 +80,24 @@ services:
     volumes:
       - ./server/config.yaml:/app/config.yaml
 
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: neobarter-ai
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://neobarter:neobarter123@postgres:5432/neobarter
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   web:
     build:
       context: ./web
