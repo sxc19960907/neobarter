@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build
+dist/
+build/
+server/server
+
+# Config (contains secrets)
+server/config.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Docker volumes
+postgres_data/
+redis_data/
+es_data/

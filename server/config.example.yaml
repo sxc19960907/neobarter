@@ -1,0 +1,47 @@
+server:
+  port: 8080
+  mode: debug  # debug / release
+
+database:
+  host: localhost
+  port: 5432
+  user: neobarter
+  password: neobarter123
+  dbname: neobarter
+  sslmode: disable
+  max_open_conns: 100
+  max_idle_conns: 10
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+jwt:
+  secret: "your-jwt-secret-change-in-production"
+  expire_hours: 168  # 7 days
+
+sms:
+  provider: aliyun
+  access_key_id: ""
+  access_key_secret: ""
+  sign_name: "新易巴特"
+  template_code: ""
+
+oss:
+  provider: aliyun
+  endpoint: ""
+  access_key_id: ""
+  access_key_secret: ""
+  bucket: "neobarter"
+
+elasticsearch:
+  addresses:
+    - "http://localhost:9200"
+
+rabbitmq:
+  url: "amqp://guest:guest@localhost:5672/"
+
+wallet:
+  initial_reward: 100.00  # 注册赠送巴特币数量

@@ -1,0 +1,85 @@
+# 开发指南
+
+## 环境要求
+
+- Go 1.21+
+- Node.js 18+
+- PostgreSQL 15+
+- Redis 7+
+- Docker (可选)
+
+## 快速开始
+
+### 1. 克隆项目
+
+```bash
+cd /Users/timmy/PycharmProjects/ppt-master/projects/neobarter
+```
+
+### 2. 后端开发
+
+```bash
+cd server
+go mod download
+cp config.example.yaml config.yaml
+go run cmd/migrate/main.go
+go run cmd/server/main.go
+```
+
+### 3. 前端开发
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+### 4. 使用 Docker
+
+```bash
+docker-compose up -d
+docker-compose logs -f
+docker-compose down
+```
+
+## 项目结构
+
+```
+neobarter/
++-- web/                    # 前端应用
+|   +-- src/
+|       +-- components/     # 通用组件
+|       +-- pages/          # 页面
+|       +-- services/       # API调用
+|       +-- stores/         # 状态管理
++-- server/                 # 后端服务
+|   +-- cmd/                # 入口
+|   +-- internal/           # 内部实现
+|       +-- handler/        # HTTP处理器
+|       +-- service/        # 业务逻辑
+|       +-- repository/     # 数据访问
++-- ai-service/            # AI服务
++-- deploy/                # 部署配置
++-- docs/                  # 文档
+```
+
+## 开发规范
+
+### Git 提交规范
+
+```
+<type>(<scope>): <subject>
+
+类型:
+- feat: 新功能
+- fix: 修复
+- docs: 文档
+- style: 格式
+- refactor: 重构
+- test: 测试
+- chore: 构建/工具
+```
+
+---
+
+*更新时间：2026-05-31*
