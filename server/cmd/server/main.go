@@ -8,7 +8,9 @@ import (
 	"github.com/neobarter/server/internal/config"
 	"github.com/neobarter/server/internal/handler"
 	"github.com/neobarter/server/internal/middleware"
+	"github.com/neobarter/server/internal/pkg/es"
 	jwtPkg "github.com/neobarter/server/internal/pkg/jwt"
+	"github.com/neobarter/server/internal/pkg/mq"
 	"github.com/neobarter/server/internal/pkg/sms"
 	"github.com/neobarter/server/internal/repository"
 	"github.com/neobarter/server/internal/service"
@@ -60,6 +62,28 @@ func main() {
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
+	// 初始化 Elasticsearch（可选，连接失败不阻塞启动）
+	var esClient *es.Client
+	if len(cfg.Elasticsearch.Addresses) > 0 {
+		var err error
+		esClient, err = es.NewClient(cfg.Elasticsearch.Addresses)
+		if err != nil {
+			log.Printf("WARNING: Elasticsearch not available: %v", err)
+		} else {
+			esClient.EnsureIndex()
+		}
+	}
+
+	// 初始化 RabbitMQ Publisher（可选）
+	var mqPublisher *mq.Publisher
+	if cfg.RabbitMQ.URL != "" {
+		var err error
+		mqPublisher, err = mq.NewPublisher(cfg.RabbitMQ.URL)
+		if err != nil {
+			log.Printf("WARNING: RabbitMQ not available: %v", err)
+		}
+	}
+
 	// 初始化 Repository
 	userRepo := repository.NewUserRepository(db)
 	walletRepo := repository.NewWalletRepository(db)
@@ -73,11 +97,19 @@ func main() {
 	walletSvc := service.NewWalletService(walletRepo, cfg.Wallet.InitialReward)
 	authSvc := service.NewAuthService(userRepo, walletSvc, rdb, jwtManager, smsProvider)
 	userSvc := service.NewUserService(userRepo)
-	itemSvc := service.NewItemService(itemRepo)
+	itemSvc := service.NewItemService(itemRepo, mqPublisher)
 	tradeSvc := service.NewTradeService(tradeRepo, itemRepo, walletSvc, notificationRepo)
 	messageSvc := service.NewMessageService(messageRepo, wsHub)
 	reviewSvc := service.NewReviewService(reviewRepo, userRepo)
 	notificationSvc := service.NewNotificationService(notificationRepo)
+
+	// 搜索服务（依赖 ES）
+	var searchHandler *handler.SearchHandler
+	if esClient != nil {
+		searchRepo := repository.NewSearchRepository(esClient)
+		searchSvc := service.NewSearchService(searchRepo)
+		searchHandler = handler.NewSearchHandler(searchSvc)
+	}
 
 	// 初始化 Handler
 	authHandler := handler.NewAuthHandler(authSvc)
@@ -143,6 +175,15 @@ func main() {
 
 			// 分类（公开）
 			v1.GET("/categories", itemHandler.ListCategories)
+
+			// 搜索（依赖 ES）
+			if searchHandler != nil {
+				search := authorized.Group("/search")
+				{
+					search.GET("/items", searchHandler.Search)
+					search.GET("/suggest", searchHandler.Suggest)
+				}
+			}
 
 			// 交易
 			trades := authorized.Group("/trades")

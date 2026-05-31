@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from 'react'
-import { Row, Col, Input, Select, Card, Tag, Empty, Pagination, Spin } from 'antd'
+import React, { useEffect, useState, useCallback } from 'react'
+import { Row, Col, Input, Select, Card, Tag, Empty, Pagination, Spin, AutoComplete } from 'antd'
 import { SearchOutlined, EnvironmentOutlined, EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { itemApi, type ItemQuery } from '@/services/item'
+import { searchApi, type SearchResultItem } from '@/services/search'
 import type { Item, Category } from '@/types'
-
-const { Search } = Input
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate()
   const [items, setItems] = useState<Item[]>([])
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [suggestions, setSuggestions] = useState<{ value: string }[]>([])
+  const [isSearchMode, setIsSearchMode] = useState(false)
   const [query, setQuery] = useState<ItemQuery>({ page: 1, page_size: 12 })
 
   useEffect(() => {
@@ -20,7 +22,12 @@ const HomePage: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    loadItems()
+    if (isSearchMode && query.keyword) {
+      loadSearchResults()
+    } else {
+      setIsSearchMode(false)
+      loadItems()
+    }
   }, [query])
 
   const loadCategories = async () => {
@@ -35,10 +42,40 @@ const HomePage: React.FC = () => {
     try {
       const res = await itemApi.list(query)
       setItems(res.data.data.list || [])
+      setSearchResults([])
       setTotal(res.data.data.total)
     } catch { /* ignore */ }
     setLoading(false)
   }
+
+  const loadSearchResults = async () => {
+    setLoading(true)
+    try {
+      const res = await searchApi.search({
+        keyword: query.keyword,
+        category_id: query.category_id,
+        condition: query.condition,
+        sort_by: query.sort_by,
+        page: query.page,
+        page_size: query.page_size,
+      })
+      setSearchResults(res.data.data.items || [])
+      setItems([])
+      setTotal(res.data.data.total)
+    } catch {
+      // ES 不可用时降级到普通搜索
+      loadItems()
+    }
+    setLoading(false)
+  }
+
+  const handleSuggest = useCallback(async (value: string) => {
+    if (value.length < 2) { setSuggestions([]); return }
+    try {
+      const res = await searchApi.suggest(value)
+      setSuggestions((res.data.data || []).map((s) => ({ value: s })))
+    } catch { /* ignore */ }
+  }, [])
 
   const conditionLabel: Record<string, string> = {
     new: '全新', like_new: '几乎全新', good: '良好', fair: '一般',
@@ -48,12 +85,19 @@ const HomePage: React.FC = () => {
     <div>
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={8}>
-          <Search
-            placeholder="搜索物品"
-            prefix={<SearchOutlined />}
-            onSearch={(v) => setQuery({ ...query, keyword: v, page: 1 })}
-            allowClear
-          />
+          <AutoComplete
+            options={suggestions}
+            onSearch={handleSuggest}
+            onSelect={(v) => { setIsSearchMode(true); setQuery({ ...query, keyword: v, page: 1 }) }}
+            style={{ width: '100%' }}
+          >
+            <Input.Search
+              placeholder="搜索物品"
+              prefix={<SearchOutlined />}
+              onSearch={(v) => { setIsSearchMode(!!v); setQuery({ ...query, keyword: v, page: 1 }) }}
+              allowClear
+            />
+          </AutoComplete>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Select
@@ -94,11 +138,53 @@ const HomePage: React.FC = () => {
       </Row>
 
       <Spin spinning={loading}>
-        {items.length === 0 ? (
+        {items.length === 0 && searchResults.length === 0 ? (
           <Empty description="暂无物品" />
         ) : (
           <Row gutter={[16, 16]}>
-            {items.map((item) => (
+            {/* 搜索模式：展示 ES 结果（含高亮） */}
+            {isSearchMode && searchResults.map((item) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={item.id}>
+                <Card
+                  hoverable
+                  cover={
+                    item.images?.[0] ? (
+                      <img alt={item.title} src={item.images[0]} style={{ height: 200, objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ height: 200, background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                        暂无图片
+                      </div>
+                    )
+                  }
+                  onClick={() => navigate(`/items/${item.id}`)}
+                >
+                  <Card.Meta
+                    title={
+                      item.highlight?.title?.[0]
+                        ? <span dangerouslySetInnerHTML={{ __html: item.highlight.title[0] }} />
+                        : item.title
+                    }
+                    description={
+                      <div>
+                        {item.highlight?.description?.[0] && (
+                          <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }} dangerouslySetInnerHTML={{ __html: item.highlight.description[0] }} />
+                        )}
+                        <div style={{ marginBottom: 8 }}>
+                          <Tag color="blue">{conditionLabel[item.condition] || item.condition}</Tag>
+                          {item.estimated_value > 0 && <Tag color="orange">¥{item.estimated_value} 巴特币</Tag>}
+                        </div>
+                        <div style={{ color: '#999', fontSize: 12 }}>
+                          {item.location && <span><EnvironmentOutlined /> {item.location} </span>}
+                          <span><EyeOutlined /> {item.view_count}</span>
+                        </div>
+                      </div>
+                    }
+                  />
+                </Card>
+              </Col>
+            ))}
+            {/* 普通模式：展示数据库结果 */}
+            {!isSearchMode && items.map((item) => (
               <Col xs={24} sm={12} md={8} lg={6} key={item.id}>
                 <Card
                   hoverable
