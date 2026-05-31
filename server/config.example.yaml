@@ -30,8 +30,8 @@ sms:
   template_code: ""
 
 oss:
-  provider: aliyun
-  endpoint: ""
+  provider: local  # local（本地存储，开发环境）/ aliyun（阿里云 OSS，生产环境）
+  endpoint: ""      # 如 oss-cn-hangzhou.aliyuncs.com
   access_key_id: ""
   access_key_secret: ""
   bucket: "neobarter"

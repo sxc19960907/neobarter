@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react'
-import { Card, Form, Input, Button, Avatar, message, Descriptions } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { Card, Form, Input, Button, Avatar, message, Descriptions, Upload } from 'antd'
 import { UserOutlined } from '@ant-design/icons'
+import type { UploadProps } from 'antd'
 import { useAuthStore } from '@/stores/auth'
 import { userApi } from '@/services/user'
+import { uploadApi } from '@/services/upload'
 
 const ProfilePage: React.FC = () => {
   const { user, fetchUser } = useAuthStore()
   const [form] = Form.useForm()
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -17,6 +20,37 @@ const ProfilePage: React.FC = () => {
       })
     }
   }, [user, form])
+
+  // 头像上传
+  const handleAvatarUpload: UploadProps['customRequest'] = async (options) => {
+    const file = options.file as File
+    setAvatarUploading(true)
+    try {
+      const res = await uploadApi.uploadImage(file)
+      await userApi.updateMe({ avatar_url: res.data.data.url })
+      await fetchUser()
+      message.success('头像更新成功')
+      options.onSuccess?.(res.data.data)
+    } catch (err) {
+      message.error('头像上传失败')
+      options.onError?.(err as Error)
+    }
+    setAvatarUploading(false)
+  }
+
+  const beforeAvatarUpload = (file: File) => {
+    const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+    if (!isValidType) {
+      message.error('仅支持 jpg/png/webp 格式')
+      return Upload.LIST_IGNORE
+    }
+    const isLt5M = file.size / 1024 / 1024 < 5
+    if (!isLt5M) {
+      message.error('头像大小不能超过 5MB')
+      return Upload.LIST_IGNORE
+    }
+    return true
+  }
 
   const handleSave = async (values: { nickname: string; bio: string; location: string }) => {
     try {
@@ -32,7 +66,19 @@ const ProfilePage: React.FC = () => {
     <div style={{ maxWidth: 600 }}>
       <Card title="个人信息" style={{ marginBottom: 24 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Avatar size={80} src={user?.avatar_url} icon={<UserOutlined />} />
+          <Upload
+            showUploadList={false}
+            customRequest={handleAvatarUpload}
+            beforeUpload={beforeAvatarUpload}
+            accept="image/*"
+          >
+            <div style={{ cursor: 'pointer', display: 'inline-block' }}>
+              <Avatar size={80} src={user?.avatar_url} icon={<UserOutlined />} />
+              <div style={{ marginTop: 8, color: '#1890ff', fontSize: 12 }}>
+                {avatarUploading ? '上传中...' : '点击更换头像'}
+              </div>
+            </div>
+          </Upload>
         </div>
         <Descriptions column={1} size="small" style={{ marginBottom: 24 }}>
           <Descriptions.Item label="手机号">{user?.phone}</Descriptions.Item>

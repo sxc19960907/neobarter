@@ -37,3 +37,6 @@ Thumbs.db
 postgres_data/
 redis_data/
 es_data/
+
+# Uploaded files (local storage)
+server/uploads/

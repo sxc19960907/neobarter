@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/neobarter/server/internal/config"
@@ -12,6 +13,7 @@ import (
 	jwtPkg "github.com/neobarter/server/internal/pkg/jwt"
 	"github.com/neobarter/server/internal/pkg/mq"
 	"github.com/neobarter/server/internal/pkg/sms"
+	"github.com/neobarter/server/internal/pkg/storage"
 	"github.com/neobarter/server/internal/repository"
 	"github.com/neobarter/server/internal/service"
 	"github.com/neobarter/server/internal/ws"
@@ -59,6 +61,7 @@ func main() {
 	// 初始化组件
 	jwtManager := jwtPkg.NewManager(cfg.JWT.Secret, cfg.JWT.ExpireHours)
 	smsProvider := sms.NewMockProvider()
+	storageProvider := storage.New(cfg.OSS)
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
@@ -102,6 +105,7 @@ func main() {
 	messageSvc := service.NewMessageService(messageRepo, wsHub)
 	reviewSvc := service.NewReviewService(reviewRepo, userRepo)
 	notificationSvc := service.NewNotificationService(notificationRepo)
+	uploadSvc := service.NewUploadService(storageProvider)
 
 	// 搜索服务（依赖 ES）
 	var searchHandler *handler.SearchHandler
@@ -120,6 +124,7 @@ func main() {
 	messageHandler := handler.NewMessageHandler(messageSvc)
 	reviewHandler := handler.NewReviewHandler(reviewSvc)
 	notificationHandler := handler.NewNotificationHandler(notificationSvc)
+	uploadHandler := handler.NewUploadHandler(uploadSvc)
 
 	// 设置路由
 	if cfg.Server.Mode == "release" {
@@ -128,6 +133,11 @@ func main() {
 
 	r := gin.Default()
 	r.Use(middleware.CORS())
+
+	// 本地存储时挂载静态文件服务
+	if local, ok := storageProvider.(*storage.LocalProvider); ok {
+		r.Static(local.URLPrefix(), local.BaseDir())
+	}
 
 	// API v1
 	v1 := r.Group("/v1")
@@ -161,6 +171,11 @@ func main() {
 				wallet.GET("", walletHandler.GetWallet)
 				wallet.GET("/transactions", walletHandler.ListTransactions)
 			}
+
+			// 上传（限流：每分钟最多30次）
+			authorized.POST("/upload/image",
+				middleware.RateLimit(30, time.Minute),
+				uploadHandler.UploadImage)
 
 			// 物品
 			items := authorized.Group("/items")

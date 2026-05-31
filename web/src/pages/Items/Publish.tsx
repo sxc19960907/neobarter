@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Form, Input, Select, InputNumber, Upload, Button, message, Card } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
+import type { UploadFile, UploadProps } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { itemApi } from '@/services/item'
+import { uploadApi } from '@/services/upload'
 import type { Category } from '@/types'
 
 const { TextArea } = Input
@@ -11,13 +13,51 @@ const PublishItem: React.FC = () => {
   const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
+  const [fileList, setFileList] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
 
   useEffect(() => {
     itemApi.listCategories().then((res) => setCategories(res.data.data))
   }, [])
 
+  // 自定义上传：调用后端上传接口
+  const customUpload: UploadProps['customRequest'] = async (options) => {
+    const { file, onSuccess, onError } = options
+    try {
+      const res = await uploadApi.uploadImage(file as File)
+      onSuccess?.(res.data.data)
+    } catch (err) {
+      message.error('图片上传失败')
+      onError?.(err as Error)
+    }
+  }
+
+  const handleChange: UploadProps['onChange'] = ({ fileList: newList }) => {
+    setFileList(newList)
+  }
+
+  // 校验文件类型和大小
+  const beforeUpload = (file: File) => {
+    const isValidType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)
+    if (!isValidType) {
+      message.error('仅支持 jpg/png/webp/gif 格式')
+      return Upload.LIST_IGNORE
+    }
+    const isLt5M = file.size / 1024 / 1024 < 5
+    if (!isLt5M) {
+      message.error('图片大小不能超过 5MB')
+      return Upload.LIST_IGNORE
+    }
+    return true
+  }
+
   const handleSubmit = async (values: Record<string, unknown>) => {
+    // 收集已成功上传的图片 URL
+    const images = fileList
+      .filter((f) => f.status === 'done')
+      .map((f) => (f.response as { url: string })?.url)
+      .filter(Boolean)
+
     setLoading(true)
     try {
       await itemApi.create({
@@ -26,7 +66,7 @@ const PublishItem: React.FC = () => {
         category_id: values.category_id as number,
         estimated_value: String(values.estimated_value || 0),
         condition: values.condition as string,
-        images: [],
+        images,
         want_items: values.want_items ? (values.want_items as string).split(',').map((s: string) => s.trim()) : [],
         location: values.location as string,
       })
@@ -69,12 +109,22 @@ const PublishItem: React.FC = () => {
           <InputNumber min={0} precision={2} style={{ width: '100%' }} placeholder="物品估值" />
         </Form.Item>
 
-        <Form.Item name="images" label="物品图片">
-          <Upload listType="picture-card" maxCount={9} beforeUpload={() => false}>
-            <div>
-              <PlusOutlined />
-              <div style={{ marginTop: 8 }}>上传</div>
-            </div>
+        <Form.Item label="物品图片" extra="最多9张，单张不超过5MB">
+          <Upload
+            listType="picture-card"
+            maxCount={9}
+            fileList={fileList}
+            customRequest={customUpload}
+            beforeUpload={beforeUpload}
+            onChange={handleChange}
+            accept="image/*"
+          >
+            {fileList.length < 9 && (
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>上传</div>
+              </div>
+            )}
           </Upload>
         </Form.Item>
 
