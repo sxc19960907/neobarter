@@ -108,6 +108,15 @@ cd server && CGO_ENABLED=1 go test ./...
 - **CN base-image pulls**: configure OrbStack/Docker daemon `registry-mirrors` (`~/.orbstack/config/docker.json`) when docker.io times out, then `orb restart docker`.
 - CI builds/pushes images to `ghcr.io/<owner>/neobarter-{server,web,ai}` via `docker/build-push-action`; PR builds only, push-to-main pushes. Auth via `GITHUB_TOKEN` (needs `packages: write` job permission).
 
+### Config & full-stack compose
+
+- **Config precedence**: env vars (`NEOBARTER_` prefix, nested keys joined by `_`, e.g. `NEOBARTER_DATABASE_HOST`) > `config.yaml` > built-in defaults (`config.setDefaults()`). The config file is OPTIONAL — containers run on env vars alone.
+- viper `AutomaticEnv` only binds keys that have a registered default; that's why `setDefaults()` registers every connection key. **Slices/special types (`elasticsearch.addresses`, `rabbitmq.url`) need manual `os.Getenv` post-processing** — AutomaticEnv doesn't split comma lists into `[]string`.
+- server image builds three binaries (`server`/`migrate`/`consumer`) into `/app`; one image (`neobarter-server:local`) is reused by all three compose services via different `command:`.
+- compose orchestration order: infra `service_healthy` → `migrate` (one-shot, `service_completed_successfully`) → `server`/`consumer`. Use a YAML anchor (`&server-env`/`*server-env`) to DRY the connection env across the three.
+- **ES index creation must degrade gracefully**: the IK analyzer (`ik_smart`) requires the `analysis-ik` plugin which the stock ES image lacks. `EnsureIndex` tries the IK mapping, falls back to a built-in `standard`-analyzer mapping (`ItemMappingFallback`) on failure — otherwise consumer crash-loops. CJK precision suffers (single-char tokenization) until the plugin is installed.
+- Swagger UI is gated behind non-`release` mode, so it 404s under compose (which sets `NEOBARTER_SERVER_MODE=release`) — that's intended, not a bug.
+
 ## Security Checklist
 
 - [ ] All user input validated via `binding:"required"` or manual checks

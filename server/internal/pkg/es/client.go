@@ -41,33 +41,46 @@ func NewClient(addresses []string) (*Client, error) {
 	return &Client{es: es}, nil
 }
 
-// EnsureIndex 确保索引存在，不存在则创建
+// EnsureIndex 确保索引存在。优先用 IK 分词映射；若 IK 插件不可用则降级到内置分析器。
 func (c *Client) EnsureIndex() error {
 	res, err := c.es.Indices.Exists([]string{ItemIndex})
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	res.Body.Close()
 
 	if res.StatusCode == 200 {
 		return nil // 已存在
 	}
 
-	// 创建索引
-	res, err = c.es.Indices.Create(
+	// 优先尝试 IK 中文分词映射
+	if err := c.createIndex(ItemMapping); err != nil {
+		log.Printf("IK 分词映射创建失败，降级到内置分析器: %v", err)
+		// 降级到内置分析器映射
+		if ferr := c.createIndex(ItemMappingFallback); ferr != nil {
+			return fmt.Errorf("fallback index create failed: %w", ferr)
+		}
+		log.Printf("Created index %s (内置分析器降级模式)", ItemIndex)
+		return nil
+	}
+
+	log.Printf("Created index: %s (IK 中文分词)", ItemIndex)
+	return nil
+}
+
+func (c *Client) createIndex(mapping string) error {
+	res, err := c.es.Indices.Create(
 		ItemIndex,
-		c.es.Indices.Create.WithBody(strings.NewReader(ItemMapping)),
+		c.es.Indices.Create.WithBody(strings.NewReader(mapping)),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create index: %w", err)
+		return err
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
-		return fmt.Errorf("create index error: %s", res.String())
+		return fmt.Errorf("%s", res.String())
 	}
-
-	log.Printf("Created index: %s", ItemIndex)
 	return nil
 }
 

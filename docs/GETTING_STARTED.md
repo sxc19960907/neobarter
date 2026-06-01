@@ -52,13 +52,31 @@ npm install
 npm run dev
 ```
 
-### 4. 使用 Docker
+### 4. 使用 Docker（一键启动全栈）
 
 ```bash
-docker-compose up -d
-docker-compose logs -f
-docker-compose down
+docker compose up -d --build   # 构建并启动全部 9 个服务
+docker compose ps              # 查看状态
+docker compose logs -f server  # 跟踪后端日志
+docker compose down            # 停止
 ```
+
+启动顺序由 compose 编排：基础设施（postgres/redis/es/rabbitmq）healthy
+→ `migrate` 自动迁移（一次性）→ `server` / `consumer` 启动。
+
+访问入口：
+- 前端：http://localhost:3000 （nginx 反代 API 到后端）
+- 后端 API：http://localhost:8080/v1
+- AI 服务：http://localhost:8081
+
+**配置说明**：容器内服务通过环境变量连接（无需 config.yaml）。
+配置优先级：环境变量（前缀 `NEOBARTER_`，嵌套键用下划线，如
+`NEOBARTER_DATABASE_HOST=postgres`）> config.yaml > 内置默认值。
+本地 `go run` 开发仍可用 config.yaml。
+
+> 注：Swagger UI 仅在非 release 模式开放；compose 默认 release 模式，
+> 如需文档调试，本地 `go run` 或设 `NEOBARTER_SERVER_MODE=debug`。
+> ES 中文分词需 analysis-ik 插件，未安装时自动降级到内置 standard 分析器。
 
 ### 5. 预构建镜像（GitHub Container Registry）
 

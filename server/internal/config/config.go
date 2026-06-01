@@ -1,6 +1,9 @@
 package config
 
 import (
+	"os"
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -74,12 +77,24 @@ type WalletConfig struct {
 
 var Global *Config
 
+// Load 加载配置。优先读配置文件（若存在），环境变量可覆盖：
+// 前缀 NEOBARTER_，嵌套键用下划线，如 NEOBARTER_DATABASE_HOST=postgres。
+// 配置文件不存在时，仅靠环境变量 + 默认值也能启动（容器场景）。
 func Load(path string) (*Config, error) {
+	setDefaults()
+
 	viper.SetConfigFile(path)
 	viper.SetConfigType("yaml")
 
+	viper.SetEnvPrefix("NEOBARTER")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	// 配置文件可选：找不到文件不报错，用环境变量 + 默认值兜底
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+		if _, notFound := err.(viper.ConfigFileNotFoundError); !notFound && !os.IsNotExist(err) {
+			return nil, err
+		}
 	}
 
 	var cfg Config
@@ -87,6 +102,35 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
+	// 切片/特殊类型的环境变量单独处理（viper AutomaticEnv 对 []string 支持不佳）
+	// NEOBARTER_ELASTICSEARCH_ADDRESSES 支持逗号分隔多地址
+	if v := os.Getenv("NEOBARTER_ELASTICSEARCH_ADDRESSES"); v != "" {
+		cfg.Elasticsearch.Addresses = strings.Split(v, ",")
+	}
+	if v := os.Getenv("NEOBARTER_RABBITMQ_URL"); v != "" {
+		cfg.RabbitMQ.URL = v
+	}
+
 	Global = &cfg
 	return &cfg, nil
+}
+
+func setDefaults() {
+	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.mode", "release")
+	viper.SetDefault("database.host", "localhost")
+	viper.SetDefault("database.port", 5432)
+	viper.SetDefault("database.user", "neobarter")
+	viper.SetDefault("database.password", "neobarter123")
+	viper.SetDefault("database.dbname", "neobarter")
+	viper.SetDefault("database.sslmode", "disable")
+	viper.SetDefault("database.max_open_conns", 100)
+	viper.SetDefault("database.max_idle_conns", 10)
+	viper.SetDefault("redis.host", "localhost")
+	viper.SetDefault("redis.port", 6379)
+	viper.SetDefault("redis.db", 0)
+	viper.SetDefault("jwt.secret", "change-me-in-production")
+	viper.SetDefault("jwt.expire_hours", 168)
+	viper.SetDefault("oss.provider", "local")
+	viper.SetDefault("wallet.initial_reward", 100.0)
 }
