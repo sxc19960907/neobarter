@@ -216,3 +216,98 @@ func (h *TradeHandler) Cancel(c *gin.Context) {
 
 	response.Success(c, nil)
 }
+
+type CounterReq struct {
+	CounterItemID     *int64  `json:"counter_item_id"`
+	CounterCoinAmount float64 `json:"counter_coin_amount"`
+	Message           string  `json:"message"`
+}
+
+// Counter 反向提议
+// @Summary      反向提议（还价）
+// @Description  目标用户对待处理交易提出新条件（换其他物品/调整巴特币）
+// @Tags         交易
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int         true  "交易ID"
+// @Param        body  body      CounterReq  true  "反向提议条件"
+// @Success      200   {object}  response.Response
+// @Failure      400   {object}  response.Response
+// @Router       /trades/{id}/counter [put]
+func (h *TradeHandler) Counter(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	id := parseID(c, "id")
+	if id == 0 {
+		return
+	}
+
+	var req CounterReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误")
+		return
+	}
+
+	if err := h.tradeSvc.Counter(id, userID, req.CounterItemID, decimal.NewFromFloat(req.CounterCoinAmount), req.Message); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, nil)
+}
+
+// AcceptCounter 接受反向提议
+// @Summary      接受反向提议
+// @Tags         交易
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "交易ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Router       /trades/{id}/counter/accept [put]
+func (h *TradeHandler) AcceptCounter(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	id := parseID(c, "id")
+	if id == 0 {
+		return
+	}
+
+	if err := h.tradeSvc.AcceptCounter(id, userID); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, nil)
+}
+
+// RejectCounter 拒绝反向提议
+// @Summary      拒绝反向提议
+// @Tags         交易
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int        true  "交易ID"
+// @Param        body  body      RejectReq  true  "拒绝原因"
+// @Success      200   {object}  response.Response
+// @Failure      400   {object}  response.Response
+// @Router       /trades/{id}/counter/reject [put]
+func (h *TradeHandler) RejectCounter(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	id := parseID(c, "id")
+	if id == 0 {
+		return
+	}
+
+	var req RejectReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请填写拒绝原因")
+		return
+	}
+
+	if err := h.tradeSvc.RejectCounter(id, userID, req.Reason); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, nil)
+}

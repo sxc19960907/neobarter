@@ -16,10 +16,14 @@ type TradeRequest struct {
 	Status           string          `json:"status" gorm:"size:20;not null;default:pending;index"`
 	Message          string          `json:"message"`
 	RejectReason     string          `json:"reject_reason"`
-	ExpiredAt        *time.Time      `json:"expired_at"`
-	CompletedAt      *time.Time      `json:"completed_at"`
-	CreatedAt        time.Time       `json:"created_at"`
-	UpdatedAt        time.Time       `json:"updated_at"`
+	// 反向提议（还价）字段：B 对 pending 交易发起反向提议时填写
+	CounterItemID     *int64          `json:"counter_item_id"`
+	CounterCoinAmount decimal.Decimal `json:"counter_coin_amount" gorm:"type:decimal(10,2);default:0" swaggertype:"string"`
+	CounterMessage    string          `json:"counter_message"`
+	ExpiredAt         *time.Time      `json:"expired_at"`
+	CompletedAt       *time.Time      `json:"completed_at"`
+	CreatedAt         time.Time       `json:"created_at"`
+	UpdatedAt         time.Time       `json:"updated_at"`
 
 	// 关联
 	Initiator   *User `json:"initiator,omitempty" gorm:"foreignKey:InitiatorID"`
@@ -40,4 +44,5 @@ const (
 	TradeStatusCompleted = "completed"
 	TradeStatusCancelled = "cancelled"
 	TradeStatusExpired   = "expired"
+	TradeStatusCountered = "countered" // 已被反向提议，等待发起方响应
 )

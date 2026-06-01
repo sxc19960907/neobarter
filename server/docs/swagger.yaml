@@ -1,5 +1,14 @@
 basePath: /v1
 definitions:
+  handler.CounterReq:
+    properties:
+      counter_coin_amount:
+        type: number
+      counter_item_id:
+        type: integer
+      message:
+        type: string
+    type: object
   handler.CreateAddressReq:
     properties:
       city:
@@ -258,6 +267,13 @@ definitions:
       barter_coin_amount:
         type: string
       completed_at:
+        type: string
+      counter_coin_amount:
+        type: string
+      counter_item_id:
+        description: 反向提议（还价）字段：B 对 pending 交易发起反向提议时填写
+        type: integer
+      counter_message:
         type: string
       created_at:
         type: string
@@ -1192,6 +1208,95 @@ paths:
       security:
       - BearerAuth: []
       summary: 确认完成交易
+      tags:
+      - 交易
+  /trades/{id}/counter:
+    put:
+      consumes:
+      - application/json
+      description: 目标用户对待处理交易提出新条件（换其他物品/调整巴特币）
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 反向提议条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CounterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 反向提议（还价）
+      tags:
+      - 交易
+  /trades/{id}/counter/accept:
+    put:
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 接受反向提议
+      tags:
+      - 交易
+  /trades/{id}/counter/reject:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 拒绝原因
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RejectReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 拒绝反向提议
       tags:
       - 交易
   /trades/{id}/reject:

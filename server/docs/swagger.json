@@ -1355,6 +1355,148 @@
                 }
             }
         },
+        "/trades/{id}/counter": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "目标用户对待处理交易提出新条件（换其他物品/调整巴特币）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "交易"
+                ],
+                "summary": "反向提议（还价）",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "交易ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "反向提议条件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CounterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/trades/{id}/counter/accept": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "交易"
+                ],
+                "summary": "接受反向提议",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "交易ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/trades/{id}/counter/reject": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "交易"
+                ],
+                "summary": "拒绝反向提议",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "交易ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "拒绝原因",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.RejectReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/trades/{id}/reject": {
             "put": {
                 "security": [
@@ -1889,6 +2031,20 @@
         }
     },
     "definitions": {
+        "handler.CounterReq": {
+            "type": "object",
+            "properties": {
+                "counter_coin_amount": {
+                    "type": "number"
+                },
+                "counter_item_id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.CreateAddressReq": {
             "type": "object",
             "required": [
@@ -2279,6 +2435,16 @@
                     "type": "string"
                 },
                 "completed_at": {
+                    "type": "string"
+                },
+                "counter_coin_amount": {
+                    "type": "string"
+                },
+                "counter_item_id": {
+                    "description": "反向提议（还价）字段：B 对 pending 交易发起反向提议时填写",
+                    "type": "integer"
+                },
+                "counter_message": {
                     "type": "string"
                 },
                 "created_at": {

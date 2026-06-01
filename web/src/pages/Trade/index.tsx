@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Table, Tag, Button, Space, Tabs, message, Modal, Input } from 'antd'
+import { Table, Tag, Button, Space, Tabs, message, Modal, Input, InputNumber } from 'antd'
 import { tradeApi } from '@/services/trade'
 import { useAuthStore } from '@/stores/auth'
 import type { TradeRequest } from '@/types'
@@ -13,6 +13,9 @@ const TradeList: React.FC = () => {
   const [status, setStatus] = useState('')
   const [rejectModal, setRejectModal] = useState<number | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [counterModal, setCounterModal] = useState<number | null>(null)
+  const [counterCoin, setCounterCoin] = useState(0)
+  const [counterMsg, setCounterMsg] = useState('')
 
   useEffect(() => { loadTrades() }, [page, status])
 
@@ -61,6 +64,32 @@ const TradeList: React.FC = () => {
     } catch (err: unknown) { message.error((err as Error).message) }
   }
 
+  const handleCounter = async () => {
+    if (!counterModal) return
+    try {
+      await tradeApi.counter(counterModal, { counter_coin_amount: counterCoin, message: counterMsg })
+      message.success('反向提议已发送')
+      setCounterModal(null); setCounterCoin(0); setCounterMsg('')
+      loadTrades()
+    } catch (err: unknown) { message.error((err as Error).message) }
+  }
+
+  const handleAcceptCounter = async (id: number) => {
+    try {
+      await tradeApi.acceptCounter(id)
+      message.success('已接受反向提议')
+      loadTrades()
+    } catch (err: unknown) { message.error((err as Error).message) }
+  }
+
+  const handleRejectCounter = async (id: number) => {
+    try {
+      await tradeApi.rejectCounter(id, '条件不合适')
+      message.success('已拒绝反向提议')
+      loadTrades()
+    } catch (err: unknown) { message.error((err as Error).message) }
+  }
+
   const statusMap: Record<string, { color: string; text: string }> = {
     pending: { color: 'orange', text: '待确认' },
     accepted: { color: 'blue', text: '已接受' },
@@ -68,6 +97,7 @@ const TradeList: React.FC = () => {
     completed: { color: 'green', text: '已完成' },
     cancelled: { color: 'default', text: '已取消' },
     expired: { color: 'default', text: '已过期' },
+    countered: { color: 'purple', text: '反向提议中' },
   }
 
   const columns = [
@@ -88,11 +118,18 @@ const TradeList: React.FC = () => {
             {r.status === 'pending' && isTarget && (
               <>
                 <Button size="small" type="primary" onClick={() => handleAccept(r.id)}>接受</Button>
+                <Button size="small" onClick={() => setCounterModal(r.id)}>反向提议</Button>
                 <Button size="small" danger onClick={() => setRejectModal(r.id)}>拒绝</Button>
               </>
             )}
             {r.status === 'pending' && isInitiator && (
               <Button size="small" onClick={() => handleCancel(r.id)}>取消</Button>
+            )}
+            {r.status === 'countered' && isInitiator && (
+              <>
+                <Button size="small" type="primary" onClick={() => handleAcceptCounter(r.id)}>接受提议</Button>
+                <Button size="small" danger onClick={() => handleRejectCounter(r.id)}>拒绝提议</Button>
+              </>
             )}
             {r.status === 'accepted' && (
               <Button size="small" type="primary" onClick={() => handleComplete(r.id)}>确认完成</Button>
@@ -134,6 +171,24 @@ const TradeList: React.FC = () => {
           value={rejectReason}
           onChange={(e) => setRejectReason(e.target.value)}
           placeholder="请填写拒绝原因"
+          rows={3}
+        />
+      </Modal>
+      <Modal
+        title="反向提议"
+        open={!!counterModal}
+        onOk={handleCounter}
+        onCancel={() => setCounterModal(null)}
+        okText="发送提议"
+      >
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 4 }}>期望巴特币金额：</div>
+          <InputNumber min={0} precision={2} value={counterCoin} onChange={(v) => setCounterCoin(v || 0)} style={{ width: '100%' }} />
+        </div>
+        <Input.TextArea
+          value={counterMsg}
+          onChange={(e) => setCounterMsg(e.target.value)}
+          placeholder="留言（可选）"
           rows={3}
         />
       </Modal>

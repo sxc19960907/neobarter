@@ -243,6 +243,9 @@ func main() {
 				trades.PUT("/:id/reject", tradeHandler.Reject)
 				trades.PUT("/:id/complete", tradeHandler.Complete)
 				trades.PUT("/:id/cancel", tradeHandler.Cancel)
+				trades.PUT("/:id/counter", tradeHandler.Counter)
+				trades.PUT("/:id/counter/accept", tradeHandler.AcceptCounter)
+				trades.PUT("/:id/counter/reject", tradeHandler.RejectCounter)
 			}
 
 			// 消息

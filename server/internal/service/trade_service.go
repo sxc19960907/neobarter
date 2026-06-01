@@ -133,6 +133,100 @@ func (s *TradeService) Reject(tradeID, userID int64, reason string) error {
 	return nil
 }
 
+// Counter 反向提议：目标用户(B)对 pending 交易还价。
+func (s *TradeService) Counter(tradeID, userID int64, counterItemID *int64, coinAmount decimal.Decimal, message string) error {
+	trade, err := s.tradeRepo.GetByID(tradeID)
+	if err != nil {
+		return ErrNotFound
+	}
+	if trade.TargetUserID != userID {
+		return ErrForbidden
+	}
+	if trade.Status != model.TradeStatusPending {
+		return errors.New("只能对待处理的交易发起反向提议")
+	}
+
+	trade.Status = model.TradeStatusCountered
+	trade.CounterItemID = counterItemID
+	trade.CounterCoinAmount = coinAmount
+	trade.CounterMessage = message
+	if err := s.tradeRepo.Update(trade); err != nil {
+		return err
+	}
+
+	s.notificationRepo.Create(&model.Notification{
+		UserID:        trade.InitiatorID,
+		Type:          model.NotifyTradeRequest,
+		Title:         "收到反向提议",
+		Content:       "对方对你的交换请求提出了新条件，请确认",
+		ReferenceType: "trade_request",
+		ReferenceID:   trade.ID,
+	})
+	return nil
+}
+
+// AcceptCounter 发起方(A)接受反向提议：把还价条件落到生效字段，状态转 accepted。
+func (s *TradeService) AcceptCounter(tradeID, userID int64) error {
+	trade, err := s.tradeRepo.GetByID(tradeID)
+	if err != nil {
+		return ErrNotFound
+	}
+	if trade.InitiatorID != userID {
+		return ErrForbidden
+	}
+	if trade.Status != model.TradeStatusCountered {
+		return errors.New("交易状态不允许此操作")
+	}
+
+	// 套用还价条件，使后续 Complete 结算逻辑无需改动
+	trade.OfferedItemID = trade.CounterItemID
+	trade.BarterCoinAmount = trade.CounterCoinAmount
+	trade.Status = model.TradeStatusAccepted
+	if err := s.tradeRepo.Update(trade); err != nil {
+		return err
+	}
+
+	s.notificationRepo.Create(&model.Notification{
+		UserID:        trade.TargetUserID,
+		Type:          model.NotifyTradeAccepted,
+		Title:         "反向提议已被接受",
+		Content:       "对方接受了你的反向提议，请确认完成交易",
+		ReferenceType: "trade_request",
+		ReferenceID:   trade.ID,
+	})
+	return nil
+}
+
+// RejectCounter 发起方(A)拒绝反向提议。
+func (s *TradeService) RejectCounter(tradeID, userID int64, reason string) error {
+	trade, err := s.tradeRepo.GetByID(tradeID)
+	if err != nil {
+		return ErrNotFound
+	}
+	if trade.InitiatorID != userID {
+		return ErrForbidden
+	}
+	if trade.Status != model.TradeStatusCountered {
+		return errors.New("交易状态不允许此操作")
+	}
+
+	trade.Status = model.TradeStatusRejected
+	trade.RejectReason = reason
+	if err := s.tradeRepo.Update(trade); err != nil {
+		return err
+	}
+
+	s.notificationRepo.Create(&model.Notification{
+		UserID:        trade.TargetUserID,
+		Type:          model.NotifyTradeRejected,
+		Title:         "反向提议被拒绝",
+		Content:       fmt.Sprintf("对方拒绝了你的反向提议，原因：%s", reason),
+		ReferenceType: "trade_request",
+		ReferenceID:   trade.ID,
+	})
+	return nil
+}
+
 // Complete 完成交易（双方确认后结算巴特币）
 func (s *TradeService) Complete(tradeID, userID int64) error {
 	trade, err := s.tradeRepo.GetByID(tradeID)
