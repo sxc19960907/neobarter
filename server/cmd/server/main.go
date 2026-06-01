@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/neobarter/server/internal/pkg/sms"
 	"github.com/neobarter/server/internal/pkg/storage"
 	"github.com/neobarter/server/internal/repository"
+	"github.com/neobarter/server/internal/scheduler"
 	"github.com/neobarter/server/internal/service"
 	"github.com/neobarter/server/internal/ws"
 	"github.com/redis/go-redis/v9"
@@ -126,6 +128,12 @@ func main() {
 	reviewSvc := service.NewReviewService(reviewRepo, userRepo)
 	notificationSvc := service.NewNotificationService(notificationRepo)
 	uploadSvc := service.NewUploadService(storageProvider)
+
+	// 后台定时任务（交易超时过期等）
+	sched := scheduler.New(tradeSvc)
+	schedCtx, schedCancel := context.WithCancel(context.Background())
+	defer schedCancel()
+	sched.Start(schedCtx)
 
 	// 搜索服务（依赖 ES）
 	var searchHandler *handler.SearchHandler

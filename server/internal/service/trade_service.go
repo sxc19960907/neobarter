@@ -207,3 +207,34 @@ func (s *TradeService) Get(tradeID, userID int64) (*model.TradeRequest, error) {
 func (s *TradeService) List(userID int64, status string, page, pageSize int) ([]model.TradeRequest, int64, error) {
 	return s.tradeRepo.ListByUser(userID, status, page, pageSize)
 }
+
+// ExpireStale 把所有超时的 pending 交易置为 expired，并通知发起方。
+// 返回过期的交易数量。由后台定时任务周期调用。
+func (s *TradeService) ExpireStale() (int, error) {
+	// 先查出待过期的交易（用于通知），再批量更新
+	expired, err := s.tradeRepo.FindExpiredPending()
+	if err != nil {
+		return 0, err
+	}
+	if len(expired) == 0 {
+		return 0, nil
+	}
+
+	if _, err := s.tradeRepo.ExpirePending(); err != nil {
+		return 0, err
+	}
+
+	// 通知发起方交易已过期
+	for _, t := range expired {
+		s.notificationRepo.Create(&model.Notification{
+			UserID:        t.InitiatorID,
+			Type:          model.NotifyTradeRejected,
+			Title:         "交换请求已过期",
+			Content:       "对方24小时内未处理，交换请求已自动关闭",
+			ReferenceType: "trade_request",
+			ReferenceID:   t.ID,
+		})
+	}
+
+	return len(expired), nil
+}

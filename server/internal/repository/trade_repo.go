@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/neobarter/server/internal/model"
 	"gorm.io/gorm"
 )
@@ -54,4 +56,23 @@ func (r *TradeRepository) ListByUser(userID int64, status string, page, pageSize
 
 func (r *TradeRepository) DB() *gorm.DB {
 	return r.db
+}
+
+// FindExpiredPending 查出已超时但仍为 pending 的交易（用于通知发起方）。
+func (r *TradeRepository) FindExpiredPending() ([]model.TradeRequest, error) {
+	var trades []model.TradeRequest
+	err := r.db.
+		Where("status = ? AND expired_at IS NOT NULL AND expired_at < ?",
+			model.TradeStatusPending, time.Now()).
+		Find(&trades).Error
+	return trades, err
+}
+
+// ExpirePending 批量把超时的 pending 交易置为 expired，返回受影响行数。
+func (r *TradeRepository) ExpirePending() (int64, error) {
+	res := r.db.Model(&model.TradeRequest{}).
+		Where("status = ? AND expired_at IS NOT NULL AND expired_at < ?",
+			model.TradeStatusPending, time.Now()).
+		Update("status", model.TradeStatusExpired)
+	return res.RowsAffected, res.Error
 }
