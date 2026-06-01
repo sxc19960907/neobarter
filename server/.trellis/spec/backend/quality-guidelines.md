@@ -99,6 +99,15 @@ cd server && CGO_ENABLED=1 go test ./...
 - The generated `docs/` package IS committed (so CI `go build` works without running swag).
 - Swagger UI served at `/swagger/index.html`, gated behind non-`release` mode.
 
+## Docker / Deployment
+
+- Each service has its own Dockerfile + `.dockerignore`; build context is the service dir (server/ web/ ai-service/).
+- **Never `COPY` from outside the build context** (e.g. `COPY ../deploy/...` is illegal in Docker). Files needed in an image must live inside that service's dir — `web/nginx.conf` is the in-image nginx config (the `deploy/nginx/` one is for compose/host use).
+- **server Dockerfile Go version must match `go.mod`** (currently `golang:1.26-alpine`). A stale base image (1.21) fails the build.
+- server Dockerfile sets `ENV GOPROXY=https://goproxy.cn,direct` so in-container `go mod download` works from CN networks; `direct` fallback keeps overseas CI working.
+- **CN base-image pulls**: configure OrbStack/Docker daemon `registry-mirrors` (`~/.orbstack/config/docker.json`) when docker.io times out, then `orb restart docker`.
+- CI builds/pushes images to `ghcr.io/<owner>/neobarter-{server,web,ai}` via `docker/build-push-action`; PR builds only, push-to-main pushes. Auth via `GITHUB_TOKEN` (needs `packages: write` job permission).
+
 ## Security Checklist
 
 - [ ] All user input validated via `binding:"required"` or manual checks
