@@ -174,6 +174,9 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 		}
 
+		// 物品分类（公开，首页未登录也可浏览）
+		v1.GET("/categories", itemHandler.ListCategories)
+
 		// 需要登录的接口
 		authorized := v1.Group("")
 		authorized.Use(middleware.Auth(jwtManager))
@@ -212,9 +215,6 @@ func main() {
 				items.DELETE("/:id", itemHandler.Delete)
 				items.PUT("/:id/status", itemHandler.UpdateStatus)
 			}
-
-			// 分类（公开）
-			v1.GET("/categories", itemHandler.ListCategories)
 
 			// 搜索（依赖 ES）
 			if searchHandler != nil {
