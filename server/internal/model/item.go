@@ -25,14 +25,14 @@ type Item struct {
 	Title          string          `json:"title" gorm:"size:100;not null"`
 	Description    string          `json:"description"`
 	CategoryID     *int            `json:"category_id" gorm:"index"`
-	EstimatedValue decimal.Decimal `json:"estimated_value" gorm:"type:decimal(10,2)"`
+	EstimatedValue decimal.Decimal `json:"estimated_value" gorm:"type:decimal(10,2)" swaggertype:"string"`
 	Condition      string          `json:"condition" gorm:"size:20;not null;default:good"`
-	Images         pq.StringArray  `json:"images" gorm:"type:text[]"`
+	Images         pq.StringArray  `json:"images" gorm:"type:text[]" swaggertype:"array,string"`
 	VideoURL       string          `json:"video_url" gorm:"size:255"`
 	Status         string          `json:"status" gorm:"size:20;not null;default:active;index"`
 	Location       string          `json:"location" gorm:"size:100"`
 	ViewCount      int             `json:"view_count" gorm:"not null;default:0"`
-	WantItems      pq.StringArray  `json:"want_items" gorm:"type:text[]"`
+	WantItems      pq.StringArray  `json:"want_items" gorm:"type:text[]" swaggertype:"array,string"`
 	CreatedAt      time.Time       `json:"created_at"`
 	UpdatedAt      time.Time       `json:"updated_at"`
 

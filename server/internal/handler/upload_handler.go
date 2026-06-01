@@ -18,7 +18,16 @@ func NewUploadHandler(uploadSvc *service.UploadService) *UploadHandler {
 }
 
 // UploadImage 上传单张图片
-// POST /v1/upload/image  (multipart/form-data, field: file)
+// @Summary      上传图片
+// @Description  上传物品图片或头像，返回可访问 URL（jpg/png/webp/gif，≤5MB）
+// @Tags         上传
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file  formData  file  true  "图片文件"
+// @Success      200   {object}  response.Response{data=object}
+// @Failure      400   {object}  response.Response
+// @Router       /upload/image [post]
 func (h *UploadHandler) UploadImage(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")
 	if err != nil {

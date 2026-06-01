@@ -24,6 +24,17 @@ type CreateTradeReq struct {
 	Message          string  `json:"message"`
 }
 
+// Create 发起交换请求
+// @Summary      发起交换请求
+// @Description  对目标物品发起交换，可附带巴特币补差价
+// @Tags         交易
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      CreateTradeReq  true  "交换请求"
+// @Success      200   {object}  response.Response{data=model.TradeRequest}
+// @Failure      400   {object}  response.Response
+// @Router       /trades [post]
 func (h *TradeHandler) Create(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	var req CreateTradeReq
@@ -47,6 +58,16 @@ func (h *TradeHandler) Create(c *gin.Context) {
 	response.Success(c, trade)
 }
 
+// List 获取交易列表
+// @Summary      获取我的交易列表
+// @Tags         交易
+// @Produce      json
+// @Security     BearerAuth
+// @Param        status     query     string  false  "状态筛选：pending/accepted/rejected/completed/cancelled"
+// @Param        page       query     int     false  "页码"
+// @Param        page_size  query     int     false  "每页数量"
+// @Success      200  {object}  response.Response{data=response.PageData}
+// @Router       /trades [get]
 func (h *TradeHandler) List(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	page, pageSize := parsePage(c)
@@ -61,6 +82,15 @@ func (h *TradeHandler) List(c *gin.Context) {
 	response.SuccessPage(c, trades, total, page, pageSize)
 }
 
+// Get 获取交易详情
+// @Summary      获取交易详情
+// @Tags         交易
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "交易ID"
+// @Success      200  {object}  response.Response{data=model.TradeRequest}
+// @Failure      404  {object}  response.Response
+// @Router       /trades/{id} [get]
 func (h *TradeHandler) Get(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -77,6 +107,15 @@ func (h *TradeHandler) Get(c *gin.Context) {
 	response.Success(c, trade)
 }
 
+// Accept 接受交换
+// @Summary      接受交换请求
+// @Tags         交易
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "交易ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Router       /trades/{id}/accept [put]
 func (h *TradeHandler) Accept(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -96,6 +135,17 @@ type RejectReq struct {
 	Reason string `json:"reason" binding:"required"`
 }
 
+// Reject 拒绝交换
+// @Summary      拒绝交换请求
+// @Tags         交易
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int        true  "交易ID"
+// @Param        body  body      RejectReq  true  "拒绝原因"
+// @Success      200   {object}  response.Response
+// @Failure      400   {object}  response.Response
+// @Router       /trades/{id}/reject [put]
 func (h *TradeHandler) Reject(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -117,6 +167,16 @@ func (h *TradeHandler) Reject(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// Complete 完成交易
+// @Summary      确认完成交易
+// @Description  双方确认后结算巴特币，物品标记为已交易
+// @Tags         交易
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "交易ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Router       /trades/{id}/complete [put]
 func (h *TradeHandler) Complete(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -132,6 +192,16 @@ func (h *TradeHandler) Complete(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// Cancel 取消交易
+// @Summary      取消交易请求
+// @Description  仅发起方可取消待处理的交易
+// @Tags         交易
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "交易ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Router       /trades/{id}/cancel [put]
 func (h *TradeHandler) Cancel(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")

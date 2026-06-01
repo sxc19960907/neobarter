@@ -12,7 +12,7 @@ type TradeRequest struct {
 	TargetUserID     int64           `json:"target_user_id" gorm:"index;not null"`
 	TargetItemID     int64           `json:"target_item_id" gorm:"not null"`
 	OfferedItemID    *int64          `json:"offered_item_id"`
-	BarterCoinAmount decimal.Decimal `json:"barter_coin_amount" gorm:"type:decimal(10,2);default:0"`
+	BarterCoinAmount decimal.Decimal `json:"barter_coin_amount" gorm:"type:decimal(10,2);default:0" swaggertype:"string"`
 	Status           string          `json:"status" gorm:"size:20;not null;default:pending;index"`
 	Message          string          `json:"message"`
 	RejectReason     string          `json:"reject_reason"`

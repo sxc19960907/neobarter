@@ -10,6 +10,13 @@ import (
 
 // Address handlers on UserHandler
 
+// ListAddresses 获取收货地址列表
+// @Summary      获取收货地址列表
+// @Tags         用户
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response{data=[]model.UserAddress}
+// @Router       /users/me/addresses [get]
 func (h *UserHandler) ListAddresses(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	addresses, err := h.userSvc.ListAddresses(userID)
@@ -30,6 +37,16 @@ type CreateAddressReq struct {
 	IsDefault bool   `json:"is_default"`
 }
 
+// CreateAddress 新增收货地址
+// @Summary      新增收货地址
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      CreateAddressReq  true  "地址信息"
+// @Success      200   {object}  response.Response{data=model.UserAddress}
+// @Failure      400   {object}  response.Response
+// @Router       /users/me/addresses [post]
 func (h *UserHandler) CreateAddress(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	var req CreateAddressReq
@@ -57,6 +74,17 @@ func (h *UserHandler) CreateAddress(c *gin.Context) {
 	response.Success(c, addr)
 }
 
+// UpdateAddress 更新收货地址
+// @Summary      更新收货地址
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int               true  "地址ID"
+// @Param        body  body      CreateAddressReq  true  "地址信息"
+// @Success      200   {object}  response.Response{data=model.UserAddress}
+// @Failure      404   {object}  response.Response
+// @Router       /users/me/addresses/{id} [put]
 func (h *UserHandler) UpdateAddress(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -92,6 +120,14 @@ func (h *UserHandler) UpdateAddress(c *gin.Context) {
 	response.Success(c, addr)
 }
 
+// DeleteAddress 删除收货地址
+// @Summary      删除收货地址
+// @Tags         用户
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "地址ID"
+// @Success      200  {object}  response.Response
+// @Router       /users/me/addresses/{id} [delete]
 func (h *UserHandler) DeleteAddress(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -117,6 +153,14 @@ func NewWalletHandler(walletSvc *service.WalletService) *WalletHandler {
 	return &WalletHandler{walletSvc: walletSvc}
 }
 
+// GetWallet 获取钱包信息
+// @Summary      获取巴特币钱包
+// @Tags         钱包
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response{data=model.Wallet}
+// @Failure      404  {object}  response.Response
+// @Router       /wallet [get]
 func (h *WalletHandler) GetWallet(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	wallet, err := h.walletSvc.GetWallet(userID)
@@ -127,6 +171,15 @@ func (h *WalletHandler) GetWallet(c *gin.Context) {
 	response.Success(c, wallet)
 }
 
+// ListTransactions 获取钱包流水
+// @Summary      获取巴特币流水
+// @Tags         钱包
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page       query     int  false  "页码"
+// @Param        page_size  query     int  false  "每页数量"
+// @Success      200  {object}  response.Response{data=response.PageData}
+// @Router       /wallet/transactions [get]
 func (h *WalletHandler) ListTransactions(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	page, pageSize := parsePage(c)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/neobarter/server/docs"
 	"github.com/neobarter/server/internal/config"
 	"github.com/neobarter/server/internal/handler"
 	"github.com/neobarter/server/internal/middleware"
@@ -18,11 +19,30 @@ import (
 	"github.com/neobarter/server/internal/service"
 	"github.com/neobarter/server/internal/ws"
 	"github.com/redis/go-redis/v9"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
+// @title           新易巴特 NeoBarter API
+// @version         1.0
+// @description     现代易货交易平台后端 API 文档。支持 C2C/B2B 双模式、巴特币结算、智能匹配。
+// @termsOfService  https://github.com/sxc19960907/neobarter
+
+// @contact.name   NeoBarter Team
+// @contact.url    https://github.com/sxc19960907/neobarter
+
+// @license.name  MIT
+
+// @host      localhost:8080
+// @BasePath  /v1
+
+// @securityDefinitions.apikey  BearerAuth
+// @in                          header
+// @name                        Authorization
+// @description                 输入格式：Bearer {token}
 func main() {
 	// 加载配置
 	cfg, err := config.Load("config.yaml")
@@ -133,6 +153,11 @@ func main() {
 
 	r := gin.Default()
 	r.Use(middleware.CORS())
+
+	// Swagger API 文档（非 release 模式开放）
+	if cfg.Server.Mode != "release" {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	// 本地存储时挂载静态文件服务
 	if local, ok := storageProvider.(*storage.LocalProvider); ok {

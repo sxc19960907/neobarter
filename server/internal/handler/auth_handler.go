@@ -19,6 +19,16 @@ type SendCodeReq struct {
 	Phone string `json:"phone" binding:"required"`
 }
 
+// SendCode 发送短信验证码
+// @Summary      发送验证码
+// @Description  向指定手机号发送登录/注册验证码（60秒内不可重复发送）
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        body  body      SendCodeReq  true  "手机号"
+// @Success      200   {object}  response.Response
+// @Failure      400   {object}  response.Response
+// @Router       /auth/send-code [post]
 func (h *AuthHandler) SendCode(c *gin.Context) {
 	var req SendCodeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -45,6 +55,16 @@ type LoginReq struct {
 	UserType string `json:"user_type"` // personal / enterprise
 }
 
+// Login 登录/注册
+// @Summary      登录或注册
+// @Description  手机号+验证码登录，未注册的手机号自动创建账户并赠送初始巴特币
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        body  body      LoginReq  true  "登录信息"
+// @Success      200   {object}  response.Response  "返回 token 和用户信息"
+// @Failure      400   {object}  response.Response
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,6 +98,14 @@ func NewUserHandler(userSvc *service.UserService) *UserHandler {
 	return &UserHandler{userSvc: userSvc}
 }
 
+// GetMe 获取当前用户信息
+// @Summary      获取当前用户信息
+// @Tags         用户
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response{data=model.User}
+// @Failure      404  {object}  response.Response
+// @Router       /users/me [get]
 func (h *UserHandler) GetMe(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	user, err := h.userSvc.GetByID(userID)
@@ -95,6 +123,16 @@ type UpdateUserReq struct {
 	Location string `json:"location"`
 }
 
+// UpdateMe 更新当前用户信息
+// @Summary      更新当前用户信息
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      UpdateUserReq  true  "用户信息"
+// @Success      200   {object}  response.Response{data=model.User}
+// @Failure      400   {object}  response.Response
+// @Router       /users/me [put]
 func (h *UserHandler) UpdateMe(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	user, err := h.userSvc.GetByID(userID)
@@ -130,6 +168,15 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 	response.Success(c, user)
 }
 
+// GetUser 获取指定用户公开信息
+// @Summary      获取用户公开信息
+// @Tags         用户
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "用户ID"
+// @Success      200  {object}  response.Response{data=model.User}
+// @Failure      404  {object}  response.Response
+// @Router       /users/{id} [get]
 func (h *UserHandler) GetUser(c *gin.Context) {
 	id := parseID(c, "id")
 	if id == 0 {

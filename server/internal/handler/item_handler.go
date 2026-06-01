@@ -33,6 +33,17 @@ type CreateItemReq struct {
 	WantItems      []string `json:"want_items"`
 }
 
+// Create 发布物品
+// @Summary      发布物品
+// @Description  发布一个新的可交换物品
+// @Tags         物品
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      CreateItemReq  true  "物品信息"
+// @Success      200   {object}  response.Response{data=model.Item}
+// @Failure      400   {object}  response.Response
+// @Router       /items [post]
 func (h *ItemHandler) Create(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	var req CreateItemReq
@@ -62,6 +73,15 @@ func (h *ItemHandler) Create(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// Get 获取物品详情
+// @Summary      获取物品详情
+// @Tags         物品
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "物品ID"
+// @Success      200  {object}  response.Response{data=model.Item}
+// @Failure      404  {object}  response.Response
+// @Router       /items/{id} [get]
 func (h *ItemHandler) Get(c *gin.Context) {
 	id := parseID(c, "id")
 	if id == 0 {
@@ -77,6 +97,24 @@ func (h *ItemHandler) Get(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// List 获取物品列表
+// @Summary      获取物品列表
+// @Description  支持分类、关键词、地区、成色、估值范围筛选；mine=true 查询自己的物品
+// @Tags         物品
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page         query     int     false  "页码"
+// @Param        page_size    query     int     false  "每页数量"
+// @Param        category_id  query     int     false  "分类ID"
+// @Param        keyword      query     string  false  "关键词"
+// @Param        location     query     string  false  "地区"
+// @Param        condition    query     string  false  "成色"
+// @Param        min_value    query     number  false  "最低估值"
+// @Param        max_value    query     number  false  "最高估值"
+// @Param        sort_by      query     string  false  "排序：created_at/view_count/estimated_value"
+// @Param        mine         query     bool    false  "是否只看自己的物品"
+// @Success      200  {object}  response.Response{data=response.PageData}
+// @Router       /items [get]
 func (h *ItemHandler) List(c *gin.Context) {
 	page, pageSize := parsePage(c)
 	categoryID, _ := strconv.Atoi(c.Query("category_id"))
@@ -111,6 +149,18 @@ func (h *ItemHandler) List(c *gin.Context) {
 	response.SuccessPage(c, items, total, page, pageSize)
 }
 
+// Update 更新物品
+// @Summary      更新物品信息
+// @Tags         物品
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int            true  "物品ID"
+// @Param        body  body      CreateItemReq  true  "物品信息"
+// @Success      200   {object}  response.Response{data=model.Item}
+// @Failure      403   {object}  response.Response
+// @Failure      404   {object}  response.Response
+// @Router       /items/{id} [put]
 func (h *ItemHandler) Update(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -156,6 +206,15 @@ func (h *ItemHandler) Update(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// Delete 删除物品
+// @Summary      删除物品
+// @Tags         物品
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "物品ID"
+// @Success      200  {object}  response.Response
+// @Failure      403  {object}  response.Response
+// @Router       /items/{id} [delete]
 func (h *ItemHandler) Delete(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -175,6 +234,18 @@ type UpdateStatusReq struct {
 	Status string `json:"status" binding:"required"`
 }
 
+// UpdateStatus 上架/下架物品
+// @Summary      修改物品状态
+// @Description  active=上架, inactive=下架
+// @Tags         物品
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int              true  "物品ID"
+// @Param        body  body      UpdateStatusReq  true  "状态"
+// @Success      200   {object}  response.Response
+// @Failure      403   {object}  response.Response
+// @Router       /items/{id}/status [put]
 func (h *ItemHandler) UpdateStatus(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -196,6 +267,13 @@ func (h *ItemHandler) UpdateStatus(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// ListCategories 获取物品分类列表
+// @Summary      获取分类列表
+// @Tags         分类
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response{data=[]model.Category}
+// @Router       /categories [get]
 func (h *ItemHandler) ListCategories(c *gin.Context) {
 	categories, err := h.itemSvc.ListCategories()
 	if err != nil {

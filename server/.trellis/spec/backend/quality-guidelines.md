@@ -88,6 +88,17 @@ cd server && CGO_ENABLED=1 go test ./...
 - All mutations require JWT auth (except `/auth/send-code` and `/auth/login`)
 - Use HTTP verbs correctly: GET (read), POST (create), PUT (update), DELETE (remove)
 
+### Swagger / OpenAPI docs
+
+- Every handler method MUST carry swag annotations (`@Summary`, `@Tags`, `@Param`, `@Success`, `@Security BearerAuth`, `@Router`). See `auth_handler.go` for the canonical pattern.
+- `@Router` paths omit the `/v1` base path prefix (e.g. `/items/{id}` not `/v1/items/{id}`).
+- Custom field types that swag can't introspect need a `swaggertype` struct tag:
+  - `decimal.Decimal` → `swaggertype:"string"`
+  - `pq.StringArray` → `swaggertype:"array,string"`
+- **Generation gotcha**: `swag init --parseDependency` crashes on Go 1.26 stdlib (`reflect.Value.Len on zero Value`). Use `--parseInternal` ONLY (resolves internal/ packages) plus the `swaggertype` tags above for third-party types. Command: `make docs`.
+- The generated `docs/` package IS committed (so CI `go build` works without running swag).
+- Swagger UI served at `/swagger/index.html`, gated behind non-`release` mode.
+
 ## Security Checklist
 
 - [ ] All user input validated via `binding:"required"` or manual checks

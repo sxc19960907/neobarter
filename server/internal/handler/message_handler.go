@@ -16,6 +16,13 @@ func NewMessageHandler(messageSvc *service.MessageService) *MessageHandler {
 	return &MessageHandler{messageSvc: messageSvc}
 }
 
+// ListConversations 获取会话列表
+// @Summary      获取会话列表
+// @Tags         消息
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response{data=[]model.ConversationParticipant}
+// @Router       /messages/conversations [get]
 func (h *MessageHandler) ListConversations(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	conversations, err := h.messageSvc.ListConversations(userID)
@@ -26,6 +33,17 @@ func (h *MessageHandler) ListConversations(c *gin.Context) {
 	response.Success(c, conversations)
 }
 
+// GetMessages 获取会话消息历史
+// @Summary      获取会话消息
+// @Tags         消息
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id         path      int  true   "会话ID"
+// @Param        page       query     int  false  "页码"
+// @Param        page_size  query     int  false  "每页数量"
+// @Success      200  {object}  response.Response{data=response.PageData}
+// @Failure      403  {object}  response.Response
+// @Router       /messages/conversations/{id} [get]
 func (h *MessageHandler) GetMessages(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	convID := parseID(c, "id")
@@ -50,6 +68,17 @@ type SendMessageReq struct {
 	MessageType    string `json:"message_type"`
 }
 
+// Send 发送消息
+// @Summary      发送消息
+// @Description  指定 conversation_id 或 receiver_id（自动创建会话）
+// @Tags         消息
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      SendMessageReq  true  "消息内容"
+// @Success      200   {object}  response.Response{data=model.Message}
+// @Failure      400   {object}  response.Response
+// @Router       /messages [post]
 func (h *MessageHandler) Send(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	var req SendMessageReq
@@ -82,6 +111,14 @@ func (h *MessageHandler) Send(c *gin.Context) {
 	response.Success(c, msg)
 }
 
+// MarkRead 标记会话已读
+// @Summary      标记会话已读
+// @Tags         消息
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "会话ID"
+// @Success      200  {object}  response.Response
+// @Router       /messages/conversations/{id}/read [put]
 func (h *MessageHandler) MarkRead(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	convID := parseID(c, "id")

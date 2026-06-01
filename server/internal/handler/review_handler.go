@@ -23,6 +23,17 @@ type CreateReviewReq struct {
 	Comment        string `json:"comment"`
 }
 
+// Create 提交评价
+// @Summary      提交交易评价
+// @Description  交易完成后对对方评分（1-5星），影响信用积分
+// @Tags         评价
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      CreateReviewReq  true  "评价内容"
+// @Success      200   {object}  response.Response{data=model.Review}
+// @Failure      400   {object}  response.Response
+// @Router       /reviews [post]
 func (h *ReviewHandler) Create(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	var req CreateReviewReq
@@ -47,6 +58,16 @@ func (h *ReviewHandler) Create(c *gin.Context) {
 	response.Success(c, review)
 }
 
+// ListByUser 获取用户收到的评价
+// @Summary      获取用户评价列表
+// @Tags         评价
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id         path      int  true   "用户ID"
+// @Param        page       query     int  false  "页码"
+// @Param        page_size  query     int  false  "每页数量"
+// @Success      200  {object}  response.Response{data=response.PageData}
+// @Router       /reviews/user/{id} [get]
 func (h *ReviewHandler) ListByUser(c *gin.Context) {
 	id := parseID(c, "id")
 	if id == 0 {
@@ -73,6 +94,15 @@ func NewNotificationHandler(notificationSvc *service.NotificationService) *Notif
 	return &NotificationHandler{notificationSvc: notificationSvc}
 }
 
+// List 获取通知列表
+// @Summary      获取通知列表
+// @Tags         通知
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page       query     int  false  "页码"
+// @Param        page_size  query     int  false  "每页数量"
+// @Success      200  {object}  response.Response{data=response.PageData}
+// @Router       /notifications [get]
 func (h *NotificationHandler) List(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	page, pageSize := parsePage(c)
@@ -86,6 +116,13 @@ func (h *NotificationHandler) List(c *gin.Context) {
 	response.SuccessPage(c, notifications, total, page, pageSize)
 }
 
+// UnreadCount 获取未读通知数
+// @Summary      获取未读通知数
+// @Tags         通知
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response{data=object}
+// @Router       /notifications/unread-count [get]
 func (h *NotificationHandler) UnreadCount(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	count, err := h.notificationSvc.UnreadCount(userID)
@@ -96,6 +133,14 @@ func (h *NotificationHandler) UnreadCount(c *gin.Context) {
 	response.Success(c, gin.H{"count": count})
 }
 
+// MarkRead 标记通知已读
+// @Summary      标记单条通知已读
+// @Tags         通知
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "通知ID"
+// @Success      200  {object}  response.Response
+// @Router       /notifications/{id}/read [put]
 func (h *NotificationHandler) MarkRead(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	id := parseID(c, "id")
@@ -110,6 +155,13 @@ func (h *NotificationHandler) MarkRead(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// MarkAllRead 标记全部通知已读
+// @Summary      标记全部通知已读
+// @Tags         通知
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  response.Response
+// @Router       /notifications/read-all [put]
 func (h *NotificationHandler) MarkAllRead(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	if err := h.notificationSvc.MarkAllRead(userID); err != nil {

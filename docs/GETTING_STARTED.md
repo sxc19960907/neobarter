@@ -26,6 +26,24 @@ go run cmd/migrate/main.go
 go run cmd/server/main.go
 ```
 
+### API 文档（Swagger）
+
+后端启动后（非 release 模式），访问交互式 API 文档：
+
+```
+http://localhost:8080/swagger/index.html
+```
+
+修改 handler 注解后，重新生成文档：
+
+```bash
+cd server
+# 首次需安装 swag CLI：go install github.com/swaggo/swag/cmd/swag@v1.16.3
+make docs   # 等价于 swag init -g cmd/server/main.go -o docs --parseInternal
+```
+
+> 在 Swagger UI 右上角 Authorize 中填入 `Bearer {token}` 即可在线调试需要登录的接口。
+
 ### 3. 前端开发
 
 ```bash

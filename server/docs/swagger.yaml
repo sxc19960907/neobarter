@@ -1,0 +1,1509 @@
+basePath: /v1
+definitions:
+  handler.CreateAddressReq:
+    properties:
+      city:
+        type: string
+      detail:
+        type: string
+      district:
+        type: string
+      is_default:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      province:
+        type: string
+    required:
+    - city
+    - detail
+    - district
+    - name
+    - phone
+    - province
+    type: object
+  handler.CreateItemReq:
+    properties:
+      category_id:
+        type: integer
+      condition:
+        type: string
+      description:
+        type: string
+      estimated_value:
+        type: number
+      images:
+        items:
+          type: string
+        type: array
+      location:
+        type: string
+      title:
+        type: string
+      video_url:
+        type: string
+      want_items:
+        items:
+          type: string
+        type: array
+    required:
+    - condition
+    - title
+    type: object
+  handler.CreateReviewReq:
+    properties:
+      comment:
+        type: string
+      rating:
+        maximum: 5
+        minimum: 1
+        type: integer
+      reviewee_id:
+        type: integer
+      trade_request_id:
+        type: integer
+    required:
+    - rating
+    - reviewee_id
+    - trade_request_id
+    type: object
+  handler.CreateTradeReq:
+    properties:
+      barter_coin_amount:
+        type: number
+      message:
+        type: string
+      offered_item_id:
+        type: integer
+      target_item_id:
+        type: integer
+    required:
+    - target_item_id
+    type: object
+  handler.LoginReq:
+    properties:
+      code:
+        type: string
+      phone:
+        type: string
+      user_type:
+        description: personal / enterprise
+        type: string
+    required:
+    - code
+    - phone
+    type: object
+  handler.RejectReq:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  handler.SendCodeReq:
+    properties:
+      phone:
+        type: string
+    required:
+    - phone
+    type: object
+  handler.SendMessageReq:
+    properties:
+      content:
+        type: string
+      conversation_id:
+        type: integer
+      message_type:
+        type: string
+      receiver_id:
+        type: integer
+    required:
+    - content
+    type: object
+  handler.UpdateStatusReq:
+    properties:
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  handler.UpdateUserReq:
+    properties:
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      location:
+        type: string
+      nickname:
+        type: string
+    type: object
+  model.Category:
+    properties:
+      icon:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      sort_order:
+        type: integer
+    type: object
+  model.ConversationParticipant:
+    properties:
+      conversation_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      last_read_at:
+        type: string
+      unread_count:
+        type: integer
+      user:
+        $ref: '#/definitions/model.User'
+      user_id:
+        type: integer
+    type: object
+  model.Item:
+    properties:
+      category:
+        $ref: '#/definitions/model.Category'
+      category_id:
+        type: integer
+      condition:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      estimated_value:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      location:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/model.User'
+        description: 关联
+      user_id:
+        type: integer
+      video_url:
+        type: string
+      view_count:
+        type: integer
+      want_items:
+        items:
+          type: string
+        type: array
+    type: object
+  model.Message:
+    properties:
+      content:
+        type: string
+      conversation_id:
+        type: integer
+      created_at:
+        type: string
+      extra_data:
+        type: string
+      id:
+        type: integer
+      message_type:
+        type: string
+      sender:
+        $ref: '#/definitions/model.User'
+      sender_id:
+        type: integer
+    type: object
+  model.Review:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      rating:
+        type: integer
+      reviewee:
+        $ref: '#/definitions/model.User'
+      reviewee_id:
+        type: integer
+      reviewer:
+        $ref: '#/definitions/model.User'
+      reviewer_id:
+        type: integer
+      trade_request_id:
+        type: integer
+    type: object
+  model.TradeRequest:
+    properties:
+      barter_coin_amount:
+        type: string
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      expired_at:
+        type: string
+      id:
+        type: integer
+      initiator:
+        allOf:
+        - $ref: '#/definitions/model.User'
+        description: 关联
+      initiator_id:
+        type: integer
+      message:
+        type: string
+      offered_item:
+        $ref: '#/definitions/model.Item'
+      offered_item_id:
+        type: integer
+      reject_reason:
+        type: string
+      status:
+        type: string
+      target_item:
+        $ref: '#/definitions/model.Item'
+      target_item_id:
+        type: integer
+      target_user:
+        $ref: '#/definitions/model.User'
+      target_user_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  model.User:
+    properties:
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      created_at:
+        type: string
+      credit_score:
+        type: integer
+      enterprise_name:
+        type: string
+      enterprise_verified:
+        type: boolean
+      id:
+        type: integer
+      last_login_at:
+        type: string
+      location:
+        type: string
+      nickname:
+        type: string
+      phone:
+        type: string
+      real_name_verified:
+        type: boolean
+      status:
+        type: string
+      updated_at:
+        type: string
+      user_type:
+        type: string
+    type: object
+  model.UserAddress:
+    properties:
+      city:
+        type: string
+      created_at:
+        type: string
+      detail:
+        type: string
+      district:
+        type: string
+      id:
+        type: integer
+      is_default:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      province:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  model.Wallet:
+    properties:
+      balance:
+        type: string
+      created_at:
+        type: string
+      frozen_balance:
+        type: string
+      id:
+        type: integer
+      total_expense:
+        type: string
+      total_income:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  response.PageData:
+    properties:
+      list: {}
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: NeoBarter Team
+    url: https://github.com/sxc19960907/neobarter
+  description: 现代易货交易平台后端 API 文档。支持 C2C/B2B 双模式、巴特币结算、智能匹配。
+  license:
+    name: MIT
+  termsOfService: https://github.com/sxc19960907/neobarter
+  title: 新易巴特 NeoBarter API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 手机号+验证码登录，未注册的手机号自动创建账户并赠送初始巴特币
+      parameters:
+      - description: 登录信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回 token 和用户信息
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 登录或注册
+      tags:
+      - 认证
+  /auth/send-code:
+    post:
+      consumes:
+      - application/json
+      description: 向指定手机号发送登录/注册验证码（60秒内不可重复发送）
+      parameters:
+      - description: 手机号
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SendCodeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 发送验证码
+      tags:
+      - 认证
+  /categories:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.Category'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取分类列表
+      tags:
+      - 分类
+  /items:
+    get:
+      description: 支持分类、关键词、地区、成色、估值范围筛选；mine=true 查询自己的物品
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 分类ID
+        in: query
+        name: category_id
+        type: integer
+      - description: 关键词
+        in: query
+        name: keyword
+        type: string
+      - description: 地区
+        in: query
+        name: location
+        type: string
+      - description: 成色
+        in: query
+        name: condition
+        type: string
+      - description: 最低估值
+        in: query
+        name: min_value
+        type: number
+      - description: 最高估值
+        in: query
+        name: max_value
+        type: number
+      - description: 排序：created_at/view_count/estimated_value
+        in: query
+        name: sort_by
+        type: string
+      - description: 是否只看自己的物品
+        in: query
+        name: mine
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageData'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取物品列表
+      tags:
+      - 物品
+    post:
+      consumes:
+      - application/json
+      description: 发布一个新的可交换物品
+      parameters:
+      - description: 物品信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateItemReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Item'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发布物品
+      tags:
+      - 物品
+  /items/{id}:
+    delete:
+      parameters:
+      - description: 物品ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除物品
+      tags:
+      - 物品
+    get:
+      parameters:
+      - description: 物品ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Item'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取物品详情
+      tags:
+      - 物品
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 物品ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 物品信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateItemReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Item'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新物品信息
+      tags:
+      - 物品
+  /items/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: active=上架, inactive=下架
+      parameters:
+      - description: 物品ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改物品状态
+      tags:
+      - 物品
+  /messages:
+    post:
+      consumes:
+      - application/json
+      description: 指定 conversation_id 或 receiver_id（自动创建会话）
+      parameters:
+      - description: 消息内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SendMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Message'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发送消息
+      tags:
+      - 消息
+  /messages/conversations:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.ConversationParticipant'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取会话列表
+      tags:
+      - 消息
+  /messages/conversations/{id}:
+    get:
+      parameters:
+      - description: 会话ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageData'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取会话消息
+      tags:
+      - 消息
+  /messages/conversations/{id}/read:
+    put:
+      parameters:
+      - description: 会话ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 标记会话已读
+      tags:
+      - 消息
+  /notifications:
+    get:
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageData'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取通知列表
+      tags:
+      - 通知
+  /notifications/{id}/read:
+    put:
+      parameters:
+      - description: 通知ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 标记单条通知已读
+      tags:
+      - 通知
+  /notifications/read-all:
+    put:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 标记全部通知已读
+      tags:
+      - 通知
+  /notifications/unread-count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取未读通知数
+      tags:
+      - 通知
+  /reviews:
+    post:
+      consumes:
+      - application/json
+      description: 交易完成后对对方评分（1-5星），影响信用积分
+      parameters:
+      - description: 评价内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateReviewReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Review'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 提交交易评价
+      tags:
+      - 评价
+  /reviews/user/{id}:
+    get:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageData'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取用户评价列表
+      tags:
+      - 评价
+  /search/items:
+    get:
+      description: 全文搜索 + 多条件筛选，返回高亮结果
+      parameters:
+      - description: 关键词
+        in: query
+        name: keyword
+        type: string
+      - description: 分类ID
+        in: query
+        name: category_id
+        type: integer
+      - description: 成色
+        in: query
+        name: condition
+        type: string
+      - description: 最低估值
+        in: query
+        name: min_value
+        type: number
+      - description: 最高估值
+        in: query
+        name: max_value
+        type: number
+      - description: 地区
+        in: query
+        name: location
+        type: string
+      - description: 排序
+        in: query
+        name: sort_by
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 搜索物品（Elasticsearch）
+      tags:
+      - 搜索
+  /search/suggest:
+    get:
+      parameters:
+      - description: 前缀关键词
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 搜索自动补全
+      tags:
+      - 搜索
+  /trades:
+    get:
+      parameters:
+      - description: 状态筛选：pending/accepted/rejected/completed/cancelled
+        in: query
+        name: status
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageData'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取我的交易列表
+      tags:
+      - 交易
+    post:
+      consumes:
+      - application/json
+      description: 对目标物品发起交换，可附带巴特币补差价
+      parameters:
+      - description: 交换请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateTradeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.TradeRequest'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发起交换请求
+      tags:
+      - 交易
+  /trades/{id}:
+    get:
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.TradeRequest'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取交易详情
+      tags:
+      - 交易
+  /trades/{id}/accept:
+    put:
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 接受交换请求
+      tags:
+      - 交易
+  /trades/{id}/cancel:
+    put:
+      description: 仅发起方可取消待处理的交易
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 取消交易请求
+      tags:
+      - 交易
+  /trades/{id}/complete:
+    put:
+      description: 双方确认后结算巴特币，物品标记为已交易
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 确认完成交易
+      tags:
+      - 交易
+  /trades/{id}/reject:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 拒绝原因
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RejectReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 拒绝交换请求
+      tags:
+      - 交易
+  /upload/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传物品图片或头像，返回可访问 URL（jpg/png/webp/gif，≤5MB）
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 上传图片
+      tags:
+      - 上传
+  /users/{id}:
+    get:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户公开信息
+      tags:
+      - 用户
+  /users/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取当前用户信息
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新当前用户信息
+      tags:
+      - 用户
+  /users/me/addresses:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.UserAddress'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取收货地址列表
+      tags:
+      - 用户
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 地址信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateAddressReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserAddress'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增收货地址
+      tags:
+      - 用户
+  /users/me/addresses/{id}:
+    delete:
+      parameters:
+      - description: 地址ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除收货地址
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 地址ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 地址信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateAddressReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserAddress'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新收货地址
+      tags:
+      - 用户
+  /wallet:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Wallet'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取巴特币钱包
+      tags:
+      - 钱包
+  /wallet/transactions:
+    get:
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageData'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取巴特币流水
+      tags:
+      - 钱包
+securityDefinitions:
+  BearerAuth:
+    description: 输入格式：Bearer {token}
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
