@@ -1,13 +1,38 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { List, Input, Button, Avatar, Badge, Empty } from 'antd'
+import { List, Input, Button, Avatar, Badge, Empty, Card } from 'antd'
 import { SendOutlined, UserOutlined } from '@ant-design/icons'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { messageApi } from '@/services/misc'
 import { useAuthStore } from '@/stores/auth'
 import type { Conversation, Message } from '@/types'
 
+// 物品卡片消息渲染
+const ItemCardBubble: React.FC<{ extraData: string; onClick: (id: number) => void }> = ({ extraData, onClick }) => {
+  let card: { item_id: number; title: string; image: string; estimated_value: string; condition: string }
+  try {
+    card = JSON.parse(extraData)
+  } catch {
+    return null
+  }
+  return (
+    <Card
+      hoverable
+      size="small"
+      style={{ width: 220, cursor: 'pointer' }}
+      onClick={() => onClick(card.item_id)}
+      cover={card.image ? <img src={card.image} alt={card.title} style={{ height: 120, objectFit: 'cover' }} /> : undefined}
+    >
+      <Card.Meta
+        title={card.title}
+        description={card.estimated_value ? `${card.estimated_value} 巴特币` : '面议'}
+      />
+    </Card>
+  )
+}
+
 const MessagesPage: React.FC = () => {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConv, setActiveConv] = useState<number | null>(null)
@@ -94,17 +119,21 @@ const MessagesPage: React.FC = () => {
                     marginBottom: 12,
                   }}
                 >
-                  <div
-                    style={{
-                      maxWidth: '70%',
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                      background: msg.sender_id === user?.id ? '#1890ff' : '#f0f0f0',
-                      color: msg.sender_id === user?.id ? '#fff' : '#000',
-                    }}
-                  >
-                    {msg.content}
-                  </div>
+                  {msg.message_type === 'item_card' && msg.extra_data ? (
+                    <ItemCardBubble extraData={msg.extra_data} onClick={(id) => navigate(`/items/${id}`)} />
+                  ) : (
+                    <div
+                      style={{
+                        maxWidth: '70%',
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        background: msg.sender_id === user?.id ? '#1890ff' : '#f0f0f0',
+                        color: msg.sender_id === user?.id ? '#fff' : '#000',
+                      }}
+                    >
+                      {msg.content}
+                    </div>
+                  )}
                 </div>
               ))}
               <div ref={messagesEndRef} />

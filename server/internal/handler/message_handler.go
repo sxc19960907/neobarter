@@ -111,6 +111,40 @@ func (h *MessageHandler) Send(c *gin.Context) {
 	response.Success(c, msg)
 }
 
+type SendItemCardReq struct {
+	ConversationID int64 `json:"conversation_id"`
+	ReceiverID     int64 `json:"receiver_id"`
+	ItemID         int64 `json:"item_id" binding:"required"`
+}
+
+// SendItemCard 发送物品卡片消息
+// @Summary      发送物品卡片
+// @Description  分享物品卡片到会话，卡片数据由后端根据 item_id 组装
+// @Tags         消息
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      SendItemCardReq  true  "物品卡片"
+// @Success      200   {object}  response.Response{data=model.Message}
+// @Failure      400   {object}  response.Response
+// @Router       /messages/item-card [post]
+func (h *MessageHandler) SendItemCard(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	var req SendItemCardReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请指定物品")
+		return
+	}
+
+	msg, err := h.messageSvc.SendItemCard(userID, req.ConversationID, req.ReceiverID, req.ItemID)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, msg)
+}
+
 // MarkRead 标记会话已读
 // @Summary      标记会话已读
 // @Tags         消息

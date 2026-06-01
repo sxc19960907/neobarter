@@ -124,7 +124,7 @@ func main() {
 	userSvc := service.NewUserService(userRepo)
 	itemSvc := service.NewItemService(itemRepo, mqPublisher)
 	tradeSvc := service.NewTradeService(tradeRepo, itemRepo, walletSvc, notificationRepo)
-	messageSvc := service.NewMessageService(messageRepo, wsHub)
+	messageSvc := service.NewMessageService(messageRepo, itemRepo, wsHub)
 	reviewSvc := service.NewReviewService(reviewRepo, userRepo)
 	notificationSvc := service.NewNotificationService(notificationRepo)
 	uploadSvc := service.NewUploadService(storageProvider)
@@ -256,6 +256,7 @@ func main() {
 				messages.GET("/conversations", messageHandler.ListConversations)
 				messages.GET("/conversations/:id", messageHandler.GetMessages)
 				messages.POST("", messageHandler.Send)
+				messages.POST("/item-card", messageHandler.SendItemCard)
 				messages.PUT("/conversations/:id/read", messageHandler.MarkRead)
 			}
 

@@ -14,6 +14,10 @@ export const messageApi = {
     return request.post<ApiResponse<Message>>('/messages', data)
   },
 
+  sendItemCard(data: { conversation_id?: number; receiver_id?: number; item_id: number }) {
+    return request.post<ApiResponse<Message>>('/messages/item-card', data)
+  },
+
   markRead(conversationId: number) {
     return request.put<ApiResponse>(`/messages/conversations/${conversationId}/read`)
   },

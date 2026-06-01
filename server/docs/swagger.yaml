@@ -118,6 +118,17 @@ definitions:
     required:
     - phone
     type: object
+  handler.SendItemCardReq:
+    properties:
+      conversation_id:
+        type: integer
+      item_id:
+        type: integer
+      receiver_id:
+        type: integer
+    required:
+    - item_id
+    type: object
   handler.SendMessageReq:
     properties:
       content:
@@ -835,6 +846,39 @@ paths:
       security:
       - BearerAuth: []
       summary: 标记会话已读
+      tags:
+      - 消息
+  /messages/item-card:
+    post:
+      consumes:
+      - application/json
+      description: 分享物品卡片到会话，卡片数据由后端根据 item_id 组装
+      parameters:
+      - description: 物品卡片
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SendItemCardReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Message'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 发送物品卡片
       tags:
       - 消息
   /notifications:

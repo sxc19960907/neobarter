@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/neobarter/server/internal/model"
@@ -11,12 +12,14 @@ import (
 
 type MessageService struct {
 	messageRepo *repository.MessageRepository
+	itemRepo    *repository.ItemRepository
 	wsHub       *ws.Hub
 }
 
-func NewMessageService(messageRepo *repository.MessageRepository, wsHub *ws.Hub) *MessageService {
+func NewMessageService(messageRepo *repository.MessageRepository, itemRepo *repository.ItemRepository, wsHub *ws.Hub) *MessageService {
 	return &MessageService{
 		messageRepo: messageRepo,
+		itemRepo:    itemRepo,
 		wsHub:       wsHub,
 	}
 }
@@ -90,6 +93,48 @@ func (s *MessageService) SendToUser(senderID, receiverID int64, content, msgType
 		return nil, err
 	}
 	return s.Send(senderID, conv.ID, content, msgType, nil)
+}
+
+// ItemCard 物品卡片的结构化数据（存入消息 extra_data）。
+type ItemCard struct {
+	ItemID         int64  `json:"item_id"`
+	Title          string `json:"title"`
+	Image          string `json:"image"`
+	EstimatedValue string `json:"estimated_value"`
+	Condition      string `json:"condition"`
+}
+
+// SendItemCard 发送物品卡片消息。卡片数据由后端根据 itemID 组装（不信任前端），
+// 存入 extra_data。conversationID 与 receiverID 二选一。
+func (s *MessageService) SendItemCard(senderID, conversationID, receiverID, itemID int64) (*model.Message, error) {
+	item, err := s.itemRepo.GetByID(itemID)
+	if err != nil {
+		return nil, errors.New("物品不存在")
+	}
+
+	card := ItemCard{
+		ItemID:         item.ID,
+		Title:          item.Title,
+		EstimatedValue: item.EstimatedValue.String(),
+		Condition:      item.Condition,
+	}
+	if len(item.Images) > 0 {
+		card.Image = item.Images[0]
+	}
+	raw, _ := json.Marshal(card)
+	extra := string(raw)
+
+	if conversationID > 0 {
+		return s.Send(senderID, conversationID, item.Title, model.MsgTypeItemCard, &extra)
+	}
+	if receiverID > 0 {
+		conv, err := s.GetOrCreateConversation(senderID, receiverID)
+		if err != nil {
+			return nil, err
+		}
+		return s.Send(senderID, conv.ID, item.Title, model.MsgTypeItemCard, &extra)
+	}
+	return nil, errors.New("请指定会话或接收者")
 }
 
 // ListConversations 获取用户会话列表
