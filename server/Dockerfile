@@ -1,6 +1,8 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /build
+# 国内构建用 goproxy 加速；海外 CI 可忽略（direct 兜底）
+ENV GOPROXY=https://goproxy.cn,direct
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .

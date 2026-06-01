@@ -60,6 +60,18 @@ docker-compose logs -f
 docker-compose down
 ```
 
+### 5. 预构建镜像（GitHub Container Registry）
+
+每次 push 到 main，CI 会自动构建并推送镜像到 ghcr.io：
+
+```bash
+docker pull ghcr.io/sxc19960907/neobarter-server:latest
+docker pull ghcr.io/sxc19960907/neobarter-web:latest
+docker pull ghcr.io/sxc19960907/neobarter-ai:latest
+```
+
+> 国内构建镜像时，daemon 可配置 registry-mirrors 加速基础镜像拉取；server 镜像内已设置 `GOPROXY=https://goproxy.cn,direct`。
+
 ## 项目结构
 
 ```

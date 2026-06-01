@@ -1,0 +1,6 @@
+uploads
+*.log
+.env
+config.yaml
+bin
+server
