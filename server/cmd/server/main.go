@@ -28,9 +28,9 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// @title           新易巴特 NeoBarter API
+// @title           Easy Barter API
 // @version         1.0
-// @description     现代易货交易平台后端 API 文档。支持 C2C/B2B 双模式、巴特币结算、智能匹配。
+// @description     现代易货交易平台后端 API。支持 C2C/B2B 双模式、巴特币结算、智能匹配。
 // @termsOfService  https://github.com/sxc19960907/neobarter
 
 // @contact.name   NeoBarter Team

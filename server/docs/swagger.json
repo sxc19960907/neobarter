@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "现代易货交易平台后端 API 文档。支持 C2C/B2B 双模式、巴特币结算、智能匹配。",
-        "title": "新易巴特 NeoBarter API",
+        "description": "现代易货交易平台后端 API。支持 C2C/B2B 双模式、巴特币结算、智能匹配。",
+        "title": "Easy Barter API",
         "termsOfService": "https://github.com/sxc19960907/neobarter",
         "contact": {
             "name": "NeoBarter Team",

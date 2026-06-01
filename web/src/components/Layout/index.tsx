@@ -46,7 +46,7 @@ const AppLayout: React.FC = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
         <div style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', cursor: 'pointer' }} onClick={() => navigate('/')}>
-          新易巴特
+          Easy Barter
         </div>
         <Space size="large">
           <Badge count={0} size="small">

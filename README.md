@@ -1,4 +1,4 @@
-# NeoBarter 新易巴特 - 产品方案
+# Easy Barter - 现代易货交易平台
 
 [![CI](https://github.com/sxc19960907/neobarter/actions/workflows/ci.yml/badge.svg)](https://github.com/sxc19960907/neobarter/actions/workflows/ci.yml)
 

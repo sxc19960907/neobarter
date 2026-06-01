@@ -55,7 +55,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f0f2f5' }}>
-      <Card title="欢迎来到新易巴特" style={{ width: 400 }}>
+      <Card title="欢迎来到 Easy Barter" style={{ width: 400 }}>
         <Form form={form} onFinish={handleLogin} initialValues={{ user_type: 'personal' }}>
           <Form.Item name="phone" rules={[{ required: true, message: '请输入手机号' }, { len: 11, message: '手机号格式错误' }]}>
             <Input prefix={<MobileOutlined />} placeholder="手机号" maxLength={11} />

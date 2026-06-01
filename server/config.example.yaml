@@ -26,7 +26,7 @@ sms:
   provider: aliyun
   access_key_id: ""
   access_key_secret: ""
-  sign_name: "新易巴特"
+  sign_name: "Easy Barter"
   template_code: ""
 
 oss:
