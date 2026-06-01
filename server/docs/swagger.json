@@ -1886,6 +1886,96 @@
                 }
             }
         },
+        "/users/me/verify-enterprise": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "提交企业名称+营业执照URL（仅企业用户，MVP 提交即认证）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "提交企业认证",
+                "parameters": [
+                    {
+                        "description": "企业信息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.VerifyEnterpriseReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/verify-realname": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "提交真实姓名+身份证号（MVP 提交即认证，未接三方核验）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "提交实名认证",
+                "parameters": [
+                    {
+                        "description": "实名信息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.VerifyRealNameReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "security": [
@@ -2250,6 +2340,36 @@
                     "type": "string"
                 },
                 "nickname": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.VerifyEnterpriseReq": {
+            "type": "object",
+            "required": [
+                "enterprise_name",
+                "license_url"
+            ],
+            "properties": {
+                "enterprise_name": {
+                    "type": "string"
+                },
+                "license_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.VerifyRealNameReq": {
+            "type": "object",
+            "required": [
+                "id_card",
+                "real_name"
+            ],
+            "properties": {
+                "id_card": {
+                    "type": "string"
+                },
+                "real_name": {
                     "type": "string"
                 }
             }

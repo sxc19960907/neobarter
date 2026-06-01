@@ -199,6 +199,8 @@ func main() {
 				users.POST("/me/addresses", userHandler.CreateAddress)
 				users.PUT("/me/addresses/:id", userHandler.UpdateAddress)
 				users.DELETE("/me/addresses/:id", userHandler.DeleteAddress)
+				users.POST("/me/verify-realname", userHandler.VerifyRealName)
+				users.POST("/me/verify-enterprise", userHandler.VerifyEnterprise)
 			}
 
 			// 钱包

@@ -143,6 +143,70 @@ func (h *UserHandler) DeleteAddress(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+type VerifyRealNameReq struct {
+	RealName string `json:"real_name" binding:"required"`
+	IDCard   string `json:"id_card" binding:"required"`
+}
+
+// VerifyRealName 提交实名认证
+// @Summary      提交实名认证
+// @Description  提交真实姓名+身份证号（MVP 提交即认证，未接三方核验）
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      VerifyRealNameReq  true  "实名信息"
+// @Success      200   {object}  response.Response
+// @Failure      400   {object}  response.Response
+// @Router       /users/me/verify-realname [post]
+func (h *UserHandler) VerifyRealName(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	var req VerifyRealNameReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请填写姓名和身份证号")
+		return
+	}
+
+	if err := h.userSvc.VerifyRealName(userID, req.RealName, req.IDCard); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, nil)
+}
+
+type VerifyEnterpriseReq struct {
+	EnterpriseName string `json:"enterprise_name" binding:"required"`
+	LicenseURL     string `json:"license_url" binding:"required"`
+}
+
+// VerifyEnterprise 提交企业认证
+// @Summary      提交企业认证
+// @Description  提交企业名称+营业执照URL（仅企业用户，MVP 提交即认证）
+// @Tags         用户
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      VerifyEnterpriseReq  true  "企业信息"
+// @Success      200   {object}  response.Response
+// @Failure      400   {object}  response.Response
+// @Router       /users/me/verify-enterprise [post]
+func (h *UserHandler) VerifyEnterprise(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	var req VerifyEnterpriseReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请填写企业名称并上传营业执照")
+		return
+	}
+
+	if err := h.userSvc.VerifyEnterprise(userID, req.EnterpriseName, req.LicenseURL); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, nil)
+}
+
 // WalletHandler
 
 type WalletHandler struct {

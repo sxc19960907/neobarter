@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Form, Input, Button, Avatar, message, Descriptions, Upload, Tag } from 'antd'
+import { Card, Form, Input, Button, Avatar, message, Descriptions, Upload, Tag, Modal } from 'antd'
 import { UserOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useAuthStore } from '@/stores/auth'
@@ -10,7 +10,9 @@ import { creditLevelMap } from '@/utils/format'
 const ProfilePage: React.FC = () => {
   const { user, fetchUser } = useAuthStore()
   const [form] = Form.useForm()
+  const [verifyForm] = Form.useForm()
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [verifyModal, setVerifyModal] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -63,6 +65,18 @@ const ProfilePage: React.FC = () => {
     }
   }
 
+  const handleVerify = async (values: { real_name: string; id_card: string }) => {
+    try {
+      await userApi.verifyRealName(values)
+      await fetchUser()
+      message.success('实名认证成功')
+      setVerifyModal(false)
+      verifyForm.resetFields()
+    } catch (err: unknown) {
+      message.error((err as Error).message)
+    }
+  }
+
   return (
     <div style={{ maxWidth: 600 }}>
       <Card title="个人信息" style={{ marginBottom: 24 }}>
@@ -92,7 +106,13 @@ const ProfilePage: React.FC = () => {
               </Tag>
             )}
           </Descriptions.Item>
-          <Descriptions.Item label="实名认证">{user?.real_name_verified ? '已认证' : '未认证'}</Descriptions.Item>
+          <Descriptions.Item label="实名认证">
+            {user?.real_name_verified ? (
+              <Tag color="green">已认证</Tag>
+            ) : (
+              <Button size="small" type="link" onClick={() => setVerifyModal(true)}>去认证</Button>
+            )}
+          </Descriptions.Item>
         </Descriptions>
 
         <Form form={form} layout="vertical" onFinish={handleSave}>
@@ -110,6 +130,30 @@ const ProfilePage: React.FC = () => {
           </Form.Item>
         </Form>
       </Card>
+
+      <Modal
+        title="实名认证"
+        open={verifyModal}
+        onOk={() => verifyForm.submit()}
+        onCancel={() => setVerifyModal(false)}
+        okText="提交认证"
+      >
+        <Form form={verifyForm} layout="vertical" onFinish={handleVerify}>
+          <Form.Item name="real_name" label="真实姓名" rules={[{ required: true, message: '请填写真实姓名' }]}>
+            <Input placeholder="请输入真实姓名" />
+          </Form.Item>
+          <Form.Item
+            name="id_card"
+            label="身份证号"
+            rules={[
+              { required: true, message: '请填写身份证号' },
+              { pattern: /^\d{17}[\dXx]$/, message: '身份证号格式不正确' },
+            ]}
+          >
+            <Input placeholder="18位身份证号" maxLength={18} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }

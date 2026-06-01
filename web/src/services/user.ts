@@ -29,4 +29,12 @@ export const userApi = {
   deleteAddress(id: number) {
     return request.delete<ApiResponse>(`/users/me/addresses/${id}`)
   },
+
+  verifyRealName(data: { real_name: string; id_card: string }) {
+    return request.post<ApiResponse>('/users/me/verify-realname', data)
+  },
+
+  verifyEnterprise(data: { enterprise_name: string; license_url: string }) {
+    return request.post<ApiResponse>('/users/me/verify-enterprise', data)
+  },
 }

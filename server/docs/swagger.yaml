@@ -149,6 +149,26 @@ definitions:
       nickname:
         type: string
     type: object
+  handler.VerifyEnterpriseReq:
+    properties:
+      enterprise_name:
+        type: string
+      license_url:
+        type: string
+    required:
+    - enterprise_name
+    - license_url
+    type: object
+  handler.VerifyRealNameReq:
+    properties:
+      id_card:
+        type: string
+      real_name:
+        type: string
+    required:
+    - id_card
+    - real_name
+    type: object
   model.Category:
     properties:
       icon:
@@ -1552,6 +1572,62 @@ paths:
       security:
       - BearerAuth: []
       summary: 更新收货地址
+      tags:
+      - 用户
+  /users/me/verify-enterprise:
+    post:
+      consumes:
+      - application/json
+      description: 提交企业名称+营业执照URL（仅企业用户，MVP 提交即认证）
+      parameters:
+      - description: 企业信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.VerifyEnterpriseReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 提交企业认证
+      tags:
+      - 用户
+  /users/me/verify-realname:
+    post:
+      consumes:
+      - application/json
+      description: 提交真实姓名+身份证号（MVP 提交即认证，未接三方核验）
+      parameters:
+      - description: 实名信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.VerifyRealNameReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 提交实名认证
       tags:
       - 用户
   /wallet:
