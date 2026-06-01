@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type User struct {
 	ID                   int64      `json:"id" gorm:"primaryKey"`
@@ -25,6 +28,40 @@ type User struct {
 
 func (User) TableName() string {
 	return "users"
+}
+
+// 信用等级常量
+const (
+	CreditLevelNormal  = "normal"  // 普通
+	CreditLevelSilver  = "silver"  // 银牌
+	CreditLevelGold    = "gold"    // 金牌
+	CreditLevelDiamond = "diamond" // 钻石
+)
+
+// CreditLevel 根据信用积分计算信用等级（派生值，不存库）。
+func CreditLevel(score int) string {
+	switch {
+	case score >= 500:
+		return CreditLevelDiamond
+	case score >= 200:
+		return CreditLevelGold
+	case score >= 120:
+		return CreditLevelSilver
+	default:
+		return CreditLevelNormal
+	}
+}
+
+// MarshalJSON 在序列化时附带派生的 credit_level 字段。
+func (u User) MarshalJSON() ([]byte, error) {
+	type alias User // 避免递归
+	return json.Marshal(struct {
+		alias
+		CreditLevel string `json:"credit_level"`
+	}{
+		alias:       alias(u),
+		CreditLevel: CreditLevel(u.CreditScore),
+	})
 }
 
 type UserAddress struct {

@@ -35,3 +35,11 @@ export function formatDateTime(time: string): string {
 export function isValidPhone(phone: string): boolean {
   return /^1[3-9]\d{9}$/.test(phone)
 }
+
+/** 信用等级标签（文字 + Ant Design Tag 颜色） */
+export const creditLevelMap: Record<string, { text: string; color: string }> = {
+  normal: { text: '普通', color: 'default' },
+  silver: { text: '银牌', color: 'blue' },
+  gold: { text: '金牌', color: 'gold' },
+  diamond: { text: '钻石', color: 'purple' },
+}

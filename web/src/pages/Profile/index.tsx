@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Form, Input, Button, Avatar, message, Descriptions, Upload } from 'antd'
+import { Card, Form, Input, Button, Avatar, message, Descriptions, Upload, Tag } from 'antd'
 import { UserOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useAuthStore } from '@/stores/auth'
 import { userApi } from '@/services/user'
 import { uploadApi } from '@/services/upload'
+import { creditLevelMap } from '@/utils/format'
 
 const ProfilePage: React.FC = () => {
   const { user, fetchUser } = useAuthStore()
@@ -83,7 +84,14 @@ const ProfilePage: React.FC = () => {
         <Descriptions column={1} size="small" style={{ marginBottom: 24 }}>
           <Descriptions.Item label="手机号">{user?.phone}</Descriptions.Item>
           <Descriptions.Item label="用户类型">{user?.user_type === 'personal' ? '个人用户' : '企业用户'}</Descriptions.Item>
-          <Descriptions.Item label="信用积分">{user?.credit_score}</Descriptions.Item>
+          <Descriptions.Item label="信用积分">
+            {user?.credit_score}
+            {user?.credit_level && (
+              <Tag color={creditLevelMap[user.credit_level]?.color} style={{ marginLeft: 8 }}>
+                {creditLevelMap[user.credit_level]?.text || user.credit_level}
+              </Tag>
+            )}
+          </Descriptions.Item>
           <Descriptions.Item label="实名认证">{user?.real_name_verified ? '已认证' : '未认证'}</Descriptions.Item>
         </Descriptions>
 

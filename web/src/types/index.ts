@@ -21,6 +21,7 @@ export interface User {
   user_type: 'personal' | 'enterprise'
   status: string
   credit_score: number
+  credit_level?: string
   real_name_verified: boolean
   enterprise_name: string
   enterprise_verified: boolean
