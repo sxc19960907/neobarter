@@ -106,3 +106,13 @@ func (r *MessageRepository) IsParticipant(convID, userID int64) bool {
 		Count(&count)
 	return count > 0
 }
+
+// ParticipantIDsExcept 返回会话参与者的 userID 列表，排除指定用户（通常是消息发送者）。
+// 用于 WebSocket 精确推送。
+func (r *MessageRepository) ParticipantIDsExcept(convID, excludeUserID int64) ([]int64, error) {
+	var ids []int64
+	err := r.db.Model(&model.ConversationParticipant{}).
+		Where("conversation_id = ? AND user_id != ?", convID, excludeUserID).
+		Pluck("user_id", &ids).Error
+	return ids, err
+}

@@ -75,8 +75,10 @@ func (s *MessageService) Send(senderID int64, conversationID int64, content, msg
 	// 增加对方未读数
 	s.messageRepo.IncrUnreadCount(conversationID, senderID)
 
-	// 通过 WebSocket 推送
-	s.wsHub.SendToConversation(conversationID, senderID, msg)
+	// 通过 WebSocket 精确推送给会话其他参与者（排除发送者）
+	if recipients, err := s.messageRepo.ParticipantIDsExcept(conversationID, senderID); err == nil {
+		s.wsHub.SendToUsers(recipients, "new_message", msg)
+	}
 
 	return msg, nil
 }

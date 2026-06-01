@@ -21,11 +21,10 @@ var upgrader = websocket.Upgrader{
 
 // Hub 管理所有 WebSocket 连接
 type Hub struct {
-	mu          sync.RWMutex
-	clients     map[int64]*Client // userID -> client
-	register    chan *Client
-	unregister  chan *Client
-	broadcast   chan []byte
+	mu         sync.RWMutex
+	clients    map[int64]*Client // userID -> client
+	register   chan *Client
+	unregister chan *Client
 }
 
 type Client struct {
@@ -45,7 +44,6 @@ func NewHub() *Hub {
 		clients:    make(map[int64]*Client),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan []byte),
 	}
 }
 
@@ -59,72 +57,52 @@ func (h *Hub) Run() {
 
 		case client := <-h.unregister:
 			h.mu.Lock()
-			if _, ok := h.clients[client.userID]; ok {
+			// 仅当 map 中仍是同一个 client 时才删除（避免同用户重连时误删新连接）
+			if existing, ok := h.clients[client.userID]; ok && existing == client {
 				delete(h.clients, client.userID)
 				close(client.send)
 			}
 			h.mu.Unlock()
-
-		case message := <-h.broadcast:
-			h.mu.RLock()
-			for _, client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client.userID)
-				}
-			}
-			h.mu.RUnlock()
 		}
 	}
 }
 
-// SendToUser 向指定用户推送消息
-func (h *Hub) SendToUser(userID int64, msg interface{}) {
+// SendToUser 向指定在线用户推送一条已封装的 WSMessage。离线则静默跳过。
+func (h *Hub) SendToUser(userID int64, eventType string, payload interface{}) {
+	data, err := json.Marshal(WSMessage{Type: eventType, Data: payload})
+	if err != nil {
+		return
+	}
+	h.deliver(userID, data)
+}
+
+// SendToUsers 向一批在线用户精确推送。用于会话消息：调用方传入会话参与者
+// （通常已排除发送者）。离线用户静默跳过，不影响其他人。
+func (h *Hub) SendToUsers(userIDs []int64, eventType string, payload interface{}) {
+	if len(userIDs) == 0 {
+		return
+	}
+	data, err := json.Marshal(WSMessage{Type: eventType, Data: payload})
+	if err != nil {
+		return
+	}
+	for _, uid := range userIDs {
+		h.deliver(uid, data)
+	}
+}
+
+// deliver 将原始字节投递给指定用户的连接（若在线）。send 缓冲满时丢弃，避免阻塞。
+func (h *Hub) deliver(userID int64, data []byte) {
 	h.mu.RLock()
 	client, ok := h.clients[userID]
 	h.mu.RUnlock()
-
 	if !ok {
 		return
 	}
-
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return
-	}
-
 	select {
 	case client.send <- data:
 	default:
-	}
-}
-
-// SendToConversation 向会话中除发送者外的所有参与者推送
-func (h *Hub) SendToConversation(conversationID int64, senderID int64, msg interface{}) {
-	// 简化实现：实际应查询会话参与者
-	// 这里通过 conversationID 在实际使用中会结合 repository 查询参与者
-	wsMsg := WSMessage{
-		Type: "new_message",
-		Data: msg,
-	}
-	data, err := json.Marshal(wsMsg)
-	if err != nil {
-		return
-	}
-
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	// 广播给所有在线用户（生产环境应精确推送）
-	for uid, client := range h.clients {
-		if uid == senderID {
-			continue
-		}
-		select {
-		case client.send <- data:
-		default:
-		}
+		// 缓冲已满，丢弃本条（连接可能已僵死，由 read/write pump 负责清理）
 	}
 }
 
